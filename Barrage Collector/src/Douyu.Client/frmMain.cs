@@ -13,7 +13,6 @@ using Douyu.Messsages;
 using Jack4net;
 using Douyu.Events;
 using Jack4net.Log;
-using Newtonsoft.Json.Linq;
 using System.Configuration;
 using System.Diagnostics;
 

@@ -119,7 +119,7 @@ namespace Douyu.Client
 
         private void bwBarrageCollector_DoWork(object sender, DoWorkEventArgs e)
         {
-            _barrageCollector.StartCollect(cboRoomId.GetTextSafe());
+            _barrageCollector.StartCollect(cboRoomId.GetTextCrossThread());
         }
 
         private void btnStopCollect_Click(object sender, EventArgs e)
@@ -147,13 +147,13 @@ namespace Douyu.Client
             const int MAX_CHAR_COUNT = 200;
 
             if (textBox.GetLineCount() > MAX_LINE_COUNT)
-                textBox.ClearSafe();
+                textBox.ClearCrossThread();
 
             message = DateTime.Now.ToString("[HH:mm:ss] ") + message;
             if (message.Length > MAX_CHAR_COUNT)
                 message = message.Substring(0, MAX_CHAR_COUNT) + "...";
 
-            textBox.AppendLineSafe(message);
+            textBox.AppendLineCrossThread(message);
         }
 
         void AppendText(TextBox textBox, string format, params object[] args)

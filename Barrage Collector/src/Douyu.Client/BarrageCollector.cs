@@ -110,7 +110,7 @@ namespace Douyu.Client
                 } catch (Exception ex) {
                     if (ex is SocketException || ex is ObjectDisposedException) {
                         try {
-                            LogService.GetLogger("Error").ErrorFormatted("网络异常, 准备断线重连: " + ex.Message, ex);
+                            LogService.GetLogger("Error").ErrorFormat("网络异常, 准备断线重连: " + ex.Message, ex);
                             ReConnect(roomId);  // 尝试断线重连: 有时候服务器会强制关闭连接!!!
                         } catch (Exception ex2) {
                             LogService.GetLogger("Error").Error("ObjectDisposedException, 断线重连失败: " + ex2.Message, ex2);
@@ -173,7 +173,7 @@ namespace Douyu.Client
 
             var loginres = TryGetMessage();
             if (loginres.Contains("type@=loginres") == false) {
-                LogService.GetLogger("Error").ErrorFormatted("服务器没有响应登录信息, 服务器返回信息为: {0}", loginres);
+                LogService.GetLogger("Error").ErrorFormat("服务器没有响应登录信息, 服务器返回信息为: {0}", loginres);
             }
         }
 
@@ -276,7 +276,7 @@ namespace Douyu.Client
                 if (messageString.Contains("type@=qausrespond") == false
                     && messageString.Contains("type@=brafsn") == false
                     && messageString.Contains("type@=rri") == false) {
-                    LogService.GetLogger("Error").ErrorFormatted("解析服务器消息出错,  服务器消息 = {0}, 除错信息 = {1}",
+                    LogService.GetLogger("Error").ErrorFormat("解析服务器消息出错,  服务器消息 = {0}, 除错信息 = {1}",
                         messageString, ex.ToString());
                 }
                 return null;

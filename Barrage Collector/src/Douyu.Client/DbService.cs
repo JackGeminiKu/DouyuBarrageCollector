@@ -53,7 +53,7 @@ namespace Douyu.Client
                 chatMessage.UserId, chatMessage.UserName, chatMessage.UserLevel,
                 chatMessage.BadgeName, chatMessage.BadgeLevel, chatMessage.BadgeRoomId);
             if (ExecuteNonQuery(command) != 1)
-                LogService.GetLogger("Error").InfoFormatted("保存弹幕失败: 返回值不为1! ({0})", command);
+                LogService.GetLogger("Error").InfoFormat("保存弹幕失败: 返回值不为1! ({0})", command);
         }
 
         public static void SaveGiftMessage(GiftMessage giftMessage)
@@ -67,7 +67,7 @@ namespace Douyu.Client
                 giftMessage.GiftId, giftMessage.Hits,
                 giftMessage.BadgeName, giftMessage.BadgeLevel, giftMessage.BadgeRoomId);
             if (ExecuteNonQuery(command) != 1)
-                LogService.GetLogger("Error").InfoFormatted("保存礼物失败: 返回值不为1! ({0})", command);
+                LogService.GetLogger("Error").InfoFormat("保存礼物失败: 返回值不为1! ({0})", command);
         }
 
         public static void SaveChouqinMessage(ChouqinMessage message)
@@ -80,7 +80,7 @@ namespace Douyu.Client
                 message.UserId, message.UserLevel,
                 message.BadgeName, message.BadgeLevel, message.BadgeRoom);
             if (ExecuteNonQuery(command) != 1)
-                LogService.GetLogger("Error").InfoFormatted("保存酬勤失败: 返回值不为1! ({0})", command);
+                LogService.GetLogger("Error").InfoFormat("保存酬勤失败: 返回值不为1! ({0})", command);
         }
 
         public static Dictionary<string, object> QueryGiftInfo(int giftId)
