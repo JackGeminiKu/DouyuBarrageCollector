@@ -9,7 +9,7 @@ namespace Douyu.Messsages
     {
         public LogoutMessage()
         {
-            AddItem("type", "logout");  // 添加登录协议type类型                        
+            AddMessageItem("type", "logout");              
         }
     }
 }

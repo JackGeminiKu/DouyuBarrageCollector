@@ -9,8 +9,8 @@ namespace Douyu.Messsages
     {
         public LoginreqMessage(string RoomId)
         {
-            AddItem("type", "loginreq");  // 添加登录协议type类型            
-            AddItem("roomid", RoomId);  // 添加登录房间ID
+            AddMessageItem("type", "loginreq");      
+            AddMessageItem("roomid", RoomId); 
         }
     }
 }

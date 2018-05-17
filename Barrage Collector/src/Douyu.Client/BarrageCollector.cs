@@ -13,12 +13,10 @@ using Jack4net.Log;
 using Jack4net;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace Douyu.Client
 {
-    /// <summary>
-    /// 弹幕客户端类
-    /// </summary>
     public class BarrageCollector
     {
         bool _stopListen = false;
@@ -33,9 +31,12 @@ namespace Douyu.Client
 
         public bool IsPlaying { get; private set; }
 
-        public bool IsCollecting(string RoomId) { return DbService.IsCollecting(RoomId); }
+        public static bool IsCollecting(string RoomId)
+        {
+            return DbService.IsCollecting(RoomId);
+        }
 
-        public void ClearCollectingStatus(string roomId)
+        public static void ClearCollectingStatus(string roomId)
         {
             DbService.SetCollecting(roomId, false);
         }
@@ -43,12 +44,13 @@ namespace Douyu.Client
         public void StartCollect(string roomId)
         {
             if (IsPlaying) {
-                MessageBox.Show("正在收集弹幕中, 请先停止!", "开始收集弹幕");
+                MessageBox.Show("正在收集弹幕中, 请先停止!", "开始收集弹幕", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             if (DbService.IsCollecting(roomId)) {
-                MessageBox.Show(string.Format("收集房间弹幕失败: 房间{0}已经处于收集状态了!", roomId), "开始收集弹幕");
+                MessageBox.Show(string.Format("收集房间弹幕失败: 房间{0}已经处于收集状态了!", roomId), "开始收集弹幕",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -61,9 +63,8 @@ namespace Douyu.Client
             DbService.SetCollecting(roomId, true);
             IsPlaying = true;
             _stopListen = false;
-            do {
-                Stopwatch swAll = Stopwatch.StartNew();
-
+            while (!_stopListen) {
+                var swAll = Stopwatch.StartNew();
                 try {
                     // 心跳消息
                     KeepLive();
@@ -71,39 +72,39 @@ namespace Douyu.Client
                     // 尝试获取服务器消息
                     var messageData = TryGetMessage();
                     if (messageData == "") {
-                        Jack4net.Timer.Delay(100);
+                        MyThread.Wait(100);
                         continue;
                     }
 
                     // 获取message items
-                    var parsedValues = GetMessageItems(messageData);
-                    if (parsedValues == null) continue;
+                    var messageItems = GetMessageItems(messageData);
+                    if (messageItems == null) continue;
 
                     // 发现有些服务器消息没有type项目, 如收到过: pingreq@=loginping/tick@=1516676439963/
-                    if (parsedValues.ContainsKey("type") == false) {
+                    if (!messageItems.ContainsKey("type")) {
                         LogService.GetLogger("Error").Error("服务器发送的消息没有type项: " + messageData);
                         continue;
                     }
 
-                    // 处理消息
-                    switch (parsedValues["type"].ToLower()) {
-                        case "chatmsg": // 弹幕信息
+                    // 处理各种消息
+                    switch (messageItems["type"].ToLower()) {
+                        case "chatmsg":
                             ChatMessage chatMessage = new ChatMessage(messageData);
                             DbService.SaveChatMessage(chatMessage);
                             OnChatMessageRecieved(chatMessage);
                             break;
-                        case "dgb": // 礼物
+                        case "dgb":
                             GiftMessage giftMessage = new GiftMessage(messageData);
                             DbService.SaveGiftMessage(giftMessage);
                             OnGiftMessageRecieved(giftMessage);
                             break;
-                        case "bc_buy_deserve":  // 勤酬                           
+                        case "bc_buy_deserve":
                             ChouqinMessage chouqinMessage = new ChouqinMessage(messageData);
                             DbService.SaveChouqinMessage(chouqinMessage);
                             OnChouqinMessageRecieved(chouqinMessage);
                             break;
                         default:
-                            LogService.GetLogger("Debug").Debug("未处理的消息: " + messageData);
+                            LogService.GetLogger("Debug").Debug("未处理的服务器消息: " + messageData);
                             OnServerMessageRecieved(new ServerMessage(messageData));
                             break;
                     }
@@ -119,8 +120,7 @@ namespace Douyu.Client
                     }
                     LogService.GetLogger("Error").Error("StartCollect Excpetion: " + ex.Message, ex);
                 }
-
-            } while (!_stopListen);
+            }
             IsPlaying = false;
         }
 
@@ -128,7 +128,7 @@ namespace Douyu.Client
         {
             _stopListen = true;
             do {
-                Jack4net.Timer.Delay(1);
+                MyThread.Wait(1);
             } while (IsPlaying);
 
             try {
@@ -149,7 +149,7 @@ namespace Douyu.Client
                 var ipEndPoint = new IPEndPoint(Dns.GetHostAddresses(BARRAGE_SERVER)[0], BARRAGE_PORT);
                 _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 _socket.Connect(ipEndPoint);
-                if (_socket.Connected == false) {
+                if (!_socket.Connected) {
                     throw new DouyuException("连接斗鱼服务器失败: " + ipEndPoint.ToString() + "\r\nNot Connected!");
                 }
             } catch (Exception e) {
@@ -166,13 +166,12 @@ namespace Douyu.Client
             // 首次连接服务器, 可以收到登录响应. 但是断开之后再连接, 有可能收不到
             var watch = Stopwatch.StartNew();
             do {
-
                 if (_socket.Available > 0) break;
-                Jack4net.Timer.Delay(100);
+                MyThread.Wait(100);
             } while (watch.ElapsedMilliseconds < 3 * 1000);
 
             var loginres = TryGetMessage();
-            if (loginres.Contains("type@=loginres") == false) {
+            if (!loginres.Contains("type@=loginres")) {
                 LogService.GetLogger("Error").ErrorFormat("服务器没有响应登录信息, 服务器返回信息为: {0}", loginres);
             }
         }
@@ -198,15 +197,17 @@ namespace Douyu.Client
 
         Stopwatch _watch = new Stopwatch();
         const int MAX_TIME_KEEP_LIVE = 40 * 1000;
+        List<byte> _messageBufer = new List<byte>();
 
         string TryGetMessage()
         {
+            const int MAX_BUFFER_LENGTH = 4096;    // 设置字节获取buffer的最大值
+
             try {
                 // socket里面有数据
                 if (_socket.Available > 0) {
                     var buffer = new byte[MAX_BUFFER_LENGTH];
                     var len = _socket.Receive(buffer);
-
                     for (var i = 0; i < len; i++) {
                         _messageBufer.Add(buffer[i]);
                     }
@@ -224,13 +225,12 @@ namespace Douyu.Client
                 // 获取message字节
                 var messageBytes = new byte[msgLen];
                 _messageBufer.CopyTo(0, messageBytes, 0, msgLen);
-
                 _messageBufer.RemoveRange(0, msgLen);
-                LogService.GetLogger("Message").Debug("[获得数据] " + messageBytes.ToHexString(" "));
+                LogService.GetLogger("Message").Debug("[获得消息字节] " + messageBytes.ToHexString(" "));
 
                 // 转换成字符串
                 var message = UTF8Encoding.UTF8.GetString(messageBytes, 12, msgLen - 12).Trim('\0');
-                LogService.GetLogger("Message").Debug("[获得消息] " + message);
+                LogService.GetLogger("Message").Debug("[获得消息字串] " + message);
                 return message;
             } catch (Exception e) {
                 LogService.GetLogger("Error").Error("TryGetMessage Error: " + e.Message, e);
@@ -240,44 +240,41 @@ namespace Douyu.Client
 
         void SendMessage(ClientMessage clientMessage)
         {
-            //LogService.GetLogger("Message").Debug("[发送消息] " + clientMessage.MessageData);
+            LogService.GetLogger("Message").Debug("[发送消息] " + clientMessage.ToString());
             var messageBytes = clientMessage.MessgeBytes;
-            //LogService.GetLogger("Message").Debug("[发送数据] " + messageBytes.ToHexString(" "));
-            var len = _socket.Send(messageBytes);
-            if (len != messageBytes.Length)
+            var count = _socket.Send(messageBytes);
+            if (count != messageBytes.Length)
                 LogService.GetLogger("Error").Error("发送数据不全: " + clientMessage.ToString());
             OnClientMessageSent(clientMessage);
         }
 
         void ReConnect(string RoomId)
         {
-            LogService.Default.Info("[Barrage] reconnect server");
+            LogService.Default.Info("[Barrage] reconnect douyu");
             if (_socket != null) _socket.Close();
             ConnectServer();
             LoginRoom(RoomId);
             JoinGroup(RoomId);
         }
 
-        Dictionary<string, string> GetMessageItems(string messageString)
+        Dictionary<string, string> GetMessageItems(string messageText)
         {
             try {
                 var messageItems = new Dictionary<string, string>();
-                var items = messageString.Split(new string[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var value in items) {
-                    var item = value.Split(new string[] { "@=" }, StringSplitOptions.None);
-                    messageItems.Add(ReplaceKeyWord(item[0]), ReplaceKeyWord(item[1]));
+                foreach (var value in messageText.Split(new string[] { "/" }, StringSplitOptions.RemoveEmptyEntries)) {
+                    var items = value.Split(new string[] { "@=" }, StringSplitOptions.None);
+                    messageItems.Add(ReplaceKeyWord(items[0]), ReplaceKeyWord(items[1]));
                 }
-
                 return messageItems;
             } catch (Exception ex) {
                 // rid@=122402/sc@=325600/sctn@=0/rid@=-1/type@=qausrespond/
                 // roomset@=/catelv1@=/catelv2@=/type@=brafsn/rid@=122402/agc@=121/ftype@=0/rid@=122402/roomset@=/catelv1@=/catelv2@=/
                 // 上面的不知道是什么消息, 有重复的key, 暂时忽略!
-                if (messageString.Contains("type@=qausrespond") == false
-                    && messageString.Contains("type@=brafsn") == false
-                    && messageString.Contains("type@=rri") == false) {
+                if (!messageText.Contains("type@=qausrespond") &&
+                    !messageText.Contains("type@=brafsn") &&
+                    !messageText.Contains("type@=rri")) {
                     LogService.GetLogger("Error").ErrorFormat("解析服务器消息出错,  服务器消息 = {0}, 除错信息 = {1}",
-                        messageString, ex.ToString());
+                        messageText, ex.ToString());
                 }
                 return null;
             }
@@ -290,47 +287,49 @@ namespace Douyu.Client
 
         #region events
 
-        public event EventHandler<ChatMessageEventArgs> ChatMessageRecieved;
-        public event EventHandler<GiftMessageEventArgs> GiftMessageRecieved;
-        public event EventHandler<ChouqinMessageEventArgs> ChouqinMessageRecieved;
-
-        public event EventHandler<ClientMessageEventArgs> ClientMessageSent;
-        public event EventHandler<ServerMessageEventArgs> ServerMessageRecieved;
+        public event EventHandler<MessageEventArgs<ChatMessage>> ChatMessageRecieved;
+        public event EventHandler<MessageEventArgs<GiftMessage>> GiftMessageRecieved;
+        public event EventHandler<MessageEventArgs<ChouqinMessage>> ChouqinMessageRecieved;
+        public event EventHandler<MessageEventArgs<ClientMessage>> ClientMessageSent;
+        public event EventHandler<MessageEventArgs<ServerMessage>> ServerMessageRecieved;
         public event EventHandler<ScoreAddedEventArgs> ScoreAdded;
 
         protected void OnScoreAdded(ScoreAddedEventArgs args)
         {
-            if (ScoreAdded != null) ScoreAdded(null, args);
+            if (ScoreAdded != null)
+                ScoreAdded(this, args);
         }
 
         protected void OnChatMessageRecieved(ChatMessage chatMessage)
         {
-            if (ChatMessageRecieved != null) ChatMessageRecieved(this, new ChatMessageEventArgs(chatMessage));
+            if (ChatMessageRecieved != null)
+                ChatMessageRecieved(this, new MessageEventArgs<ChatMessage>(chatMessage));
         }
 
         protected void OnGiftMessageRecieved(GiftMessage giftMessage)
         {
-            if (GiftMessageRecieved != null) GiftMessageRecieved(this, new GiftMessageEventArgs(giftMessage));
+            if (GiftMessageRecieved != null)
+                GiftMessageRecieved(this, new MessageEventArgs<GiftMessage>(giftMessage));
         }
 
         protected void OnChouqinMessageRecieved(ChouqinMessage message)
         {
-            if (ChouqinMessageRecieved != null) ChouqinMessageRecieved(this, new ChouqinMessageEventArgs(message));
+            if (ChouqinMessageRecieved != null)
+                ChouqinMessageRecieved(this, new MessageEventArgs<ChouqinMessage>(message));
         }
 
         protected void OnClientMessageSent(ClientMessage clientMessage)
         {
-            if (ClientMessageSent != null) ClientMessageSent(this, new ClientMessageEventArgs(clientMessage));
+            if (ClientMessageSent != null)
+                ClientMessageSent(this, new MessageEventArgs<ClientMessage>(clientMessage));
         }
 
         protected void OnServerMessageRecieved(ServerMessage serverMessage)
         {
-            if (ServerMessageRecieved != null) ServerMessageRecieved(this, new ServerMessageEventArgs(serverMessage));
+            if (ServerMessageRecieved != null)
+                ServerMessageRecieved(this, new MessageEventArgs<ServerMessage>(serverMessage));
         }
 
         #endregion
-
-        const int MAX_BUFFER_LENGTH = 4096;    // 设置字节获取buffer的最大值
-        List<byte> _messageBufer = new List<byte>();
     }
 }

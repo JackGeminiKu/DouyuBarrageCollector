@@ -82,22 +82,19 @@
       <DependentUpon>BarragePanel.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Douyu.Client\DbService.cs" />
+    <Compile Include="src\Douyu.Events\MessageEventArgs.cs" />
     <Compile Include="src\Douyu.Events\ScoreAddedEventArgs.cs" />
-    <Compile Include="src\Douyu.Client\frmMain.cs">
+    <Compile Include="src\Douyu.Messages\MessageException.cs" />
+    <Compile Include="src\frmMain.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\Douyu.Client\frmMain.designer.cs">
+    <Compile Include="src\frmMain.designer.cs">
       <DependentUpon>frmMain.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Douyu.Client\Program.cs" />
+    <Compile Include="src\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="src\Douyu.Client\BarrageCollector.cs" />
     <Compile Include="src\Douyu\DouyuException.cs" />
-    <Compile Include="src\Douyu.Events\ChatMessageEventArgs.cs" />
-    <Compile Include="src\Douyu.Events\ChouqinMessageEventArgs.cs" />
-    <Compile Include="src\Douyu.Events\ClientMessageEventArgs.cs" />
-    <Compile Include="src\Douyu.Events\GiftMesssageEventArgs.cs" />
-    <Compile Include="src\Douyu.Events\ServerMessageEventArgs.cs" />
     <Compile Include="src\Douyu.Messages.Client\ClientMessage.cs" />
     <Compile Include="src\Douyu.Messages.Client\JoinGroupMessage.cs" />
     <Compile Include="src\Douyu.Messages.Client\KeepLiveMessage.cs" />
@@ -112,7 +109,7 @@
       <DependentUpon>BarragePanel.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\Douyu.Client\frmMain.resx">
+    <EmbeddedResource Include="src\frmMain.resx">
       <DependentUpon>frmMain.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>

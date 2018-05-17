@@ -9,9 +9,9 @@ namespace Douyu.Messsages
     {
         public JoinGroupMessage(string roomId)
         {
-            AddItem("type", "joingroup");  // 添加加入弹幕池协议type类型            
-            AddItem("rid", roomId);  // 添加房间id信息
-            AddItem("gid", "-9999");  // 海量弹幕
+            AddMessageItem("type", "joingroup");    
+            AddMessageItem("rid", roomId);  // 添加房间id信息
+            AddMessageItem("gid", "-9999");  // 海量弹幕
         }
     }
 }

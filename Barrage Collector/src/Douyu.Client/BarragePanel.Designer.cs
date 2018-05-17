@@ -35,13 +35,14 @@
             this.tabPageDebug = new System.Windows.Forms.TabPage();
             this.bwBarrageCollector = new System.ComponentModel.BackgroundWorker();
             this.gbControlBoard = new System.Windows.Forms.GroupBox();
+            this.btnSaveRoom = new System.Windows.Forms.Button();
             this.chkShowAllServerMessage = new System.Windows.Forms.CheckBox();
             this.cboRoomId = new System.Windows.Forms.ComboBox();
             this.btnStopListen = new System.Windows.Forms.Button();
             this.btnStartListen = new System.Windows.Forms.Button();
             this.lblRoomId = new System.Windows.Forms.Label();
             this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
-            this.btnSaveRoom = new System.Windows.Forms.Button();
+            this.chkSimpleMode = new System.Windows.Forms.CheckBox();
             this.tabControl.SuspendLayout();
             this.tabPageServerMessage.SuspendLayout();
             this.tabPageClienMessage.SuspendLayout();
@@ -131,6 +132,7 @@
             // 
             // gbControlBoard
             // 
+            this.gbControlBoard.Controls.Add(this.chkSimpleMode);
             this.gbControlBoard.Controls.Add(this.btnSaveRoom);
             this.gbControlBoard.Controls.Add(this.chkShowAllServerMessage);
             this.gbControlBoard.Controls.Add(this.cboRoomId);
@@ -147,10 +149,20 @@
             this.gbControlBoard.TabStop = false;
             this.gbControlBoard.Text = "选择房间";
             // 
+            // btnSaveRoom
+            // 
+            this.btnSaveRoom.Location = new System.Drawing.Point(285, 17);
+            this.btnSaveRoom.Name = "btnSaveRoom";
+            this.btnSaveRoom.Size = new System.Drawing.Size(73, 21);
+            this.btnSaveRoom.TabIndex = 7;
+            this.btnSaveRoom.Text = "保存房间";
+            this.btnSaveRoom.UseVisualStyleBackColor = true;
+            this.btnSaveRoom.Click += new System.EventHandler(this.btnSaveRoom_Click);
+            // 
             // chkShowAllServerMessage
             // 
             this.chkShowAllServerMessage.AutoSize = true;
-            this.chkShowAllServerMessage.Location = new System.Drawing.Point(388, 22);
+            this.chkShowAllServerMessage.Location = new System.Drawing.Point(434, 22);
             this.chkShowAllServerMessage.Name = "chkShowAllServerMessage";
             this.chkShowAllServerMessage.Size = new System.Drawing.Size(134, 17);
             this.chkShowAllServerMessage.TabIndex = 6;
@@ -176,7 +188,7 @@
             // btnStopListen
             // 
             this.btnStopListen.Enabled = false;
-            this.btnStopListen.Location = new System.Drawing.Point(217, 17);
+            this.btnStopListen.Location = new System.Drawing.Point(207, 17);
             this.btnStopListen.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnStopListen.Name = "btnStopListen";
             this.btnStopListen.Size = new System.Drawing.Size(73, 21);
@@ -187,7 +199,7 @@
             // 
             // btnStartListen
             // 
-            this.btnStartListen.Location = new System.Drawing.Point(136, 17);
+            this.btnStartListen.Location = new System.Drawing.Point(130, 17);
             this.btnStartListen.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnStartListen.Name = "btnStartListen";
             this.btnStartListen.Size = new System.Drawing.Size(73, 21);
@@ -220,15 +232,17 @@
             this.tableLayoutPanel.Size = new System.Drawing.Size(605, 279);
             this.tableLayoutPanel.TabIndex = 5;
             // 
-            // btnSaveRoom
+            // chkSimpleMode
             // 
-            this.btnSaveRoom.Location = new System.Drawing.Point(301, 17);
-            this.btnSaveRoom.Name = "btnSaveRoom";
-            this.btnSaveRoom.Size = new System.Drawing.Size(73, 21);
-            this.btnSaveRoom.TabIndex = 7;
-            this.btnSaveRoom.Text = "保存房间";
-            this.btnSaveRoom.UseVisualStyleBackColor = true;
-            this.btnSaveRoom.Click += new System.EventHandler(this.btnSaveRoom_Click);
+            this.chkSimpleMode.AutoSize = true;
+            this.chkSimpleMode.Checked = true;
+            this.chkSimpleMode.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkSimpleMode.Location = new System.Drawing.Point(362, 22);
+            this.chkSimpleMode.Name = "chkSimpleMode";
+            this.chkSimpleMode.Size = new System.Drawing.Size(74, 17);
+            this.chkSimpleMode.TabIndex = 8;
+            this.chkSimpleMode.Text = "简单模式";
+            this.chkSimpleMode.UseVisualStyleBackColor = true;
             // 
             // BarragePanel
             // 
@@ -266,5 +280,6 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel;
         private System.Windows.Forms.CheckBox chkShowAllServerMessage;
         private System.Windows.Forms.Button btnSaveRoom;
+        private System.Windows.Forms.CheckBox chkSimpleMode;
     }
 }

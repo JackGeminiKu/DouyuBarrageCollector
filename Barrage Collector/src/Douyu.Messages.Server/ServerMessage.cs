@@ -7,23 +7,20 @@ namespace Douyu.Messsages
 {
     public class ServerMessage : Message
     {
-        public ServerMessage(string messageData)
+        public ServerMessage(string messageText)
         {
-            MessageData = messageData;
-            Items = ParseServerMessage(messageData);
+            MessageText = messageText;
+            MessageItems = ParseServerMessage(messageText);
         }
 
-        public Dictionary<string, string> Items { get; private set; }
-
-        Dictionary<string, string> ParseServerMessage(string messageData)
-            {
+        Dictionary<string, string> ParseServerMessage(string messageText)
+        {
             // 去除字符串末尾的'/0字符'
-            messageData = messageData.Trim('\0');
+            messageText = messageText.Trim('\0');
 
             // 分析协议字段中的key和value值
-            var items = new Dictionary<string, string>();
-            var values = messageData.Split(new string[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var item in values) {
+            var messageItems = new Dictionary<string, string>();
+            foreach (var item in messageText.Split(new string[] { "/" }, StringSplitOptions.RemoveEmptyEntries)) {
                 int separatorStart = item.IndexOf("@=", StringComparison.Ordinal);
                 string key = item.Substring(0, separatorStart);
                 var value = item.Substring(separatorStart + 2);
@@ -35,20 +32,15 @@ namespace Douyu.Messsages
                 ////    value = this.ParseRespond((string)value);
                 ////}
 
-                items.Add(key, value);
+                messageItems.Add(key, value);
             }
 
-            return items;
+            return messageItems;
         }
 
         protected override int MessageType
         {
             get { return 690; }
-        }
-
-        public override string ToString()
-        {
-            return MessageData;
         }
     }
 }

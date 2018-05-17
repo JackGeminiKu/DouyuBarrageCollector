@@ -2,23 +2,27 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Douyu.Messages;
 
 namespace Douyu.Messsages
 {
     public class ChouqinMessage : ServerMessage
     {
-        public ChouqinMessage(string messageData)
-            : base(messageData)
+        public ChouqinMessage(string messageText)
+            : base(messageText)
         {
-            RoomId = int.Parse(Items["rid"]);
-            Level = byte.Parse(Items["lev"]);
-            Count = short.Parse(Items["cnt"]);
-            Hits = short.Parse(Items["hits"]);
-            UserId = int.Parse(Items["sid"]);
-            UserLevel = byte.Parse(Items["level"]);
-            BadgeName = (string)Items["bnn"];
-            BadgeLevel = byte.Parse(Items["bl"]);
-            BadgeRoom = int.Parse(Items["brid"]);
+            if (MessageItems["type"] != "bc_buy_deserve")
+                throw new MessageException("{0}不是酬勤消息!", messageText);
+
+            RoomId = int.Parse(MessageItems["rid"]);
+            Level = byte.Parse(MessageItems["lev"]);
+            Count = short.Parse(MessageItems["cnt"]);
+            Hits = short.Parse(MessageItems["hits"]);
+            UserId = int.Parse(MessageItems["sid"]);
+            UserLevel = byte.Parse(MessageItems["level"]);
+            BadgeName = (string)MessageItems["bnn"];
+            BadgeLevel = byte.Parse(MessageItems["bl"]);
+            BadgeRoom = int.Parse(MessageItems["brid"]);
         }
 
         public int RoomId { get; private set; }

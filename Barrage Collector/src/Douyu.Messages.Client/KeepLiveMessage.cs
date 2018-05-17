@@ -10,7 +10,7 @@ namespace Douyu.Messsages
     {
         public KeepLiveMessage()
         {
-            AddItem("type", "mrkl");  // 添加心跳协议type类型                        
+            AddMessageItem("type", "mrkl");                
         }
     }
 }

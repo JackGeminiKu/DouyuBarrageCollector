@@ -18,7 +18,8 @@ namespace Douyu.Client
 
         static DbService()
         {
-            string connectString = @"Data Source=10.0.0.2;Initial Catalog=Douyu2;User ID=sa;Password=Jack52664638";
+            //var connectString = @"Data Source=10.0.0.2;Initial Catalog=Douyu2;User ID=sa;Password=Jack52664638";
+            var connectString = @"Data Source=(local)\SQLServer2008;Initial Catalog=Douyu2;User ID=sa;Password=52664638";
             _conn = new SqlConnection(connectString);
             _conn.Open();
             UpdateGiftInfo();

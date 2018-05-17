@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using Douyu.Events;
 using Douyu;
+using Douyu.Messsages;
 
 namespace Douyu.Client
 {
@@ -25,7 +26,6 @@ namespace Douyu.Client
             _barrageCollector.ChatMessageRecieved += barrageCollector_ChatMessageRecieved;
             _barrageCollector.GiftMessageRecieved += barrageCollector_GiftMessageRecieved;
             _barrageCollector.ChouqinMessageRecieved += barrageCollector_ChouqinMessageRecieved;
-
             _barrageCollector.ClientMessageSent += barrageCollector_ClientMessageSent;
             _barrageCollector.ServerMessageRecieved += barrageCollector_ServerMessageRecieved;
         }
@@ -35,7 +35,6 @@ namespace Douyu.Client
             _barrageCollector.ChatMessageRecieved -= barrageCollector_ChatMessageRecieved;
             _barrageCollector.GiftMessageRecieved -= barrageCollector_GiftMessageRecieved;
             _barrageCollector.ChouqinMessageRecieved -= barrageCollector_ChouqinMessageRecieved;
-
             _barrageCollector.ClientMessageSent -= barrageCollector_ClientMessageSent;
             _barrageCollector.ServerMessageRecieved -= barrageCollector_ServerMessageRecieved;
             _barrageCollector.StopCollect();
@@ -43,33 +42,45 @@ namespace Douyu.Client
 
         #region 弹幕消息
 
-        void barrageCollector_ChatMessageRecieved(object sender, ChatMessageEventArgs e)
+        void barrageCollector_ChatMessageRecieved(object sender, MessageEventArgs<ChatMessage> e)
         {
-            AppendText(txtServerMessage, "[{0}] [弹幕] [{1}]: \t{2}",
-                e.ChatMessage.RoomId, e.ChatMessage.UserName, e.ChatMessage.Text);
+            if (chkSimpleMode.Checked) {
+                AppendText(txtServerMessage, e.Message.Text);
+            } else {
+                AppendText(txtServerMessage, "[{0}] [{1}] [弹幕] [{2}]: \t{3}",
+                    DateTime.Now.ToString("[HH:mm:ss]"), e.Message.RoomId, e.Message.UserName, e.Message.Text);
+            }
         }
 
-        void barrageCollector_GiftMessageRecieved(object sender, GiftMessageEventArgs e)
+        void barrageCollector_GiftMessageRecieved(object sender, MessageEventArgs<GiftMessage> e)
         {
-            AppendText(txtServerMessage, "[{0}] [礼物] [{1}]: \t{2}",
-                e.GiftMessage.RoomId, e.GiftMessage.UserName, e.GiftMessage.GiftName);
+            if (chkSimpleMode.Checked) {
+                AppendText(txtServerMessage, e.Message.GiftName);
+            } else {
+                AppendText(txtServerMessage, "[{0}] [{1}] [礼物] [{2}]: \t{3}",
+                    DateTime.Now.ToString("[HH:mm:ss]"), e.Message.RoomId, e.Message.UserName, e.Message.GiftName);
+            }
         }
 
-        void barrageCollector_ChouqinMessageRecieved(object sender, ChouqinMessageEventArgs e)
+        void barrageCollector_ChouqinMessageRecieved(object sender, MessageEventArgs<ChouqinMessage> e)
         {
-            AppendText(txtServerMessage, "[{0}] [酬勤] [{1}]: \t酬勤{2}",
-                e.ChouqinMessage.RoomId, e.ChouqinMessage.UserId, e.ChouqinMessage.Level);
+            if (chkSimpleMode.Checked) {
+                AppendText(txtServerMessage, "酬勤{0}", e.Message.Level);
+            } else {
+                AppendText(txtServerMessage, "[{0}] [{1}] [酬勤] [{2}]: \t酬勤{3}",
+                    DateTime.Now.ToString("[HH:mm:ss]"), e.Message.RoomId, e.Message.UserId, e.Message.Level);
+            }
         }
 
-        void barrageCollector_ClientMessageSent(object sender, ClientMessageEventArgs e)
+        void barrageCollector_ClientMessageSent(object sender, MessageEventArgs<ClientMessage> e)
         {
-            AppendText(txtClientMessage, "[Client Message]: \t{0}", e.ClientMessage.MessageData);
+            AppendText(txtClientMessage, "[Client Message]: \t{0}", e.Message.ToString());
         }
 
-        void barrageCollector_ServerMessageRecieved(object sender, ServerMessageEventArgs e)
+        void barrageCollector_ServerMessageRecieved(object sender, MessageEventArgs<ServerMessage> e)
         {
             if (chkShowAllServerMessage.Checked)
-                AppendText(txtServerMessage, "[Server Message]: \t{0}", e.ServerMessage.ToString());
+                AppendText(txtServerMessage, "[Server Message]: \t{0}", e.Message.ToString());
         }
 
         #endregion
@@ -80,19 +91,19 @@ namespace Douyu.Client
             StartCollect();
         }
 
-        private void btnStartCollect_Click(object sender, EventArgs e)
+        void btnStartCollect_Click(object sender, EventArgs e)
         {
             StartCollect();
         }
 
         void StartCollect()
         {
-            string RoomId = cboRoomId.Text;
-            if (_barrageCollector.IsCollecting(RoomId)) {
+            var RoomId = cboRoomId.Text;
+            if (BarrageCollector.IsCollecting(RoomId)) {
                 MessageBox.Show(string.Format("房间{0}已经处于收集状态了!", RoomId), "开始收集",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
-                string password;
+                var password = "";
                 if (PasswordBox.ShowDialog("要强制清除收集状态, 开始收集? 请输入密码!", out password) == DialogResult.Cancel) {
                     return;
                 }
@@ -100,29 +111,25 @@ namespace Douyu.Client
                     MessageBox.Show("密码错误");
                     return;
                 }
-                _barrageCollector.ClearCollectingStatus(RoomId);
-
-                //if (MessageBox.Show("要清除收集状态?", "清除收集状态", MessageBoxButtons.YesNo, MessageBoxIcon.Warning,
-                //    MessageBoxDefaultButton.Button2) == DialogResult.No) {
-                //    return;
-                //}
-                //_barrageCollector.ClearCollectingStatus(RoomId);
+                BarrageCollector.ClearCollectingStatus(RoomId);
             }
 
-            if (bwBarrageCollector.IsBusy)
-                MessageBox.Show("正在收集弹幕, 请先停止收集", "开始收集弹幕");
+            if (bwBarrageCollector.IsBusy) {
+                MessageBox.Show("正在收集弹幕, 请先停止收集!", "开始收集弹幕", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
             btnStartListen.Enabled = false;
             cboRoomId.Enabled = false;
             btnStopListen.Enabled = true;
             bwBarrageCollector.RunWorkerAsync();
         }
 
-        private void bwBarrageCollector_DoWork(object sender, DoWorkEventArgs e)
+        void bwBarrageCollector_DoWork(object sender, DoWorkEventArgs e)
         {
             _barrageCollector.StartCollect(cboRoomId.GetTextCrossThread());
         }
 
-        private void btnStopCollect_Click(object sender, EventArgs e)
+        void btnStopCollect_Click(object sender, EventArgs e)
         {
             StopCollect();
         }
@@ -149,7 +156,6 @@ namespace Douyu.Client
             if (textBox.GetLineCount() > MAX_LINE_COUNT)
                 textBox.ClearCrossThread();
 
-            message = DateTime.Now.ToString("[HH:mm:ss] ") + message;
             if (message.Length > MAX_CHAR_COUNT)
                 message = message.Substring(0, MAX_CHAR_COUNT) + "...";
 
@@ -161,13 +167,13 @@ namespace Douyu.Client
             AppendText(textBox, string.Format(format, args));
         }
 
-        private void cboRoomId_KeyPress(object sender, KeyPressEventArgs e)
+        void cboRoomId_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == '\r')
                 btnStartListen.PerformClick();
         }
 
-        private void btnSaveRoom_Click(object sender, EventArgs e)
+        void btnSaveRoom_Click(object sender, EventArgs e)
         {
             Properties.Settings.Default.SavedRoom = int.Parse(cboRoomId.Text);
             Properties.Settings.Default.Save();

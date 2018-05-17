@@ -16,14 +16,19 @@ namespace Douyu.Messsages
         public DateTime Time { get; protected set; }
 
         protected abstract int MessageType { get; }
-        public string MessageData { get; protected set; }
-        public byte[] MessgeBytes { get { return CreateMessageBytes(MessageData); } }
+
+        public string MessageText { get; protected set; }
+
+        public byte[] MessgeBytes { get { return CreateMessageBytes(MessageText); } }
+
+        public Dictionary<string, string> MessageItems { get; protected set; }
 
         byte[] CreateMessageBytes(string messageData)
         {
-            messageData += "\0";
-            var result = new List<byte>();
+            if (!messageData.EndsWith("\0"))
+                messageData += "\0";
 
+            var result = new List<byte>();
             try {
                 var lenBytes = (messageData.Length + 8).ToLittleEndian();
                 result.AddRange(lenBytes);
@@ -40,9 +45,9 @@ namespace Douyu.Messsages
             return result.ToArray<byte>();
         }
 
-        protected void AddItem(string key, string value)
+        protected void AddMessageItem(string key, string value)
         {
-            MessageData += string.Format("{0}@={1}/", ConvertKeyWord(key), ConvertKeyWord(value));
+            MessageText += string.Format("{0}@={1}/", ConvertKeyWord(key), ConvertKeyWord(value));
         }
 
         string ConvertKeyWord(string value)
@@ -52,7 +57,7 @@ namespace Douyu.Messsages
 
         public override string ToString()
         {
-            return MessageData;
+            return MessageText;
         }
     }
 }

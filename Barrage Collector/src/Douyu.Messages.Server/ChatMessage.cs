@@ -2,22 +2,26 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Douyu.Messages;
 
 namespace Douyu.Messsages
 {
     public class ChatMessage : ServerMessage
     {
-        public ChatMessage(string messageData)
-            : base(messageData)
+        public ChatMessage(string messageText)
+            : base(messageText)
         {
-            Text = Items["txt"];
-            RoomId = int.Parse(Items["rid"]);
-            UserId = int.Parse(Items["uid"]);
-            UserName = Items["nn"];
-            UserLevel = int.Parse(Items["level"]);
-            BadgeName = Items["bnn"];
-            BadgeLevel = int.Parse(Items["bl"]);
-            BadgeRoomId = int.Parse(Items["brid"]);
+            if (MessageItems["type"] != "chatmsg")
+                throw new MessageException("{0}不是弹幕消息!", messageText);
+
+            Text = MessageItems["txt"];
+            RoomId = int.Parse(MessageItems["rid"]);
+            UserId = int.Parse(MessageItems["uid"]);
+            UserName = MessageItems["nn"];
+            UserLevel = int.Parse(MessageItems["level"]);
+            BadgeName = MessageItems["bnn"];
+            BadgeLevel = int.Parse(MessageItems["bl"]);
+            BadgeRoomId = int.Parse(MessageItems["brid"]);
         }
 
         public string Text { get; private set; }
