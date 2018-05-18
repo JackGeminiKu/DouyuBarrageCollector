@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Douyu.Events
+namespace Douyu.Client
 {
     public class MessageEventArgs<T> : EventArgs where T : Message
     {

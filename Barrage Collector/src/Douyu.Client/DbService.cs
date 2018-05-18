@@ -147,10 +147,10 @@ namespace Douyu.Client
         static int ExecuteNonQuery(string sql)
         {
             try {
-                LogService.Default.Debug("[SQL] " + sql);
+                LogService.Debug("[SQL] " + sql);
                 return CreateCommand(sql).ExecuteNonQuery();
             } catch (Exception) {
-                LogService.Default.Debug("[SQL-2] " + sql);
+                LogService.Debug("[SQL-2] " + sql);
                 return CreateCommand(sql).ExecuteNonQuery();
             }
         }
@@ -163,10 +163,10 @@ namespace Douyu.Client
         static object ExecuteScalar(string sql)
         {
             try {
-                LogService.Default.Debug("[SQL] " + sql);
+                LogService.Debug("[SQL] " + sql);
                 return CreateCommand(sql).ExecuteScalar();
             } catch (Exception) {
-                LogService.Default.Debug("[SQL-2] " + sql);
+                LogService.Debug("[SQL-2] " + sql);
                 return CreateCommand(sql).ExecuteScalar();
             }
         }
@@ -179,10 +179,10 @@ namespace Douyu.Client
         static bool HasRow(string sql)
         {
             try {
-                LogService.Default.Debug("[SQL] " + sql);
+                LogService.Debug("[SQL] " + sql);
                 return CreateCommand(sql).ExecuteScalar() != null;
             } catch (Exception) {
-                LogService.Default.Debug("[SQL-2] " + sql);
+                LogService.Debug("[SQL-2] " + sql);
                 return CreateCommand(sql).ExecuteScalar() != null;
             }
         }
@@ -190,10 +190,10 @@ namespace Douyu.Client
         static IDataReader ExecuteReader(string sql)
         {
             try {
-                LogService.Default.Debug("[SQL] " + sql);
+                LogService.Debug("[SQL] " + sql);
                 return CreateCommand(sql).ExecuteReader();
             } catch (Exception) {
-                LogService.Default.Debug("[SQL-2] " + sql);
+                LogService.Debug("[SQL-2] " + sql);
                 return CreateCommand(sql).ExecuteReader();
             }
         }

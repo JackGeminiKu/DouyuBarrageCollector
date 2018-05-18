@@ -82,8 +82,8 @@
       <DependentUpon>BarragePanel.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Douyu.Client\DbService.cs" />
-    <Compile Include="src\Douyu.Events\MessageEventArgs.cs" />
-    <Compile Include="src\Douyu.Events\ScoreAddedEventArgs.cs" />
+    <Compile Include="src\Douyu.Client\MessageEventArgs.cs" />
+    <Compile Include="src\Douyu.Client\ScoreAddedEventArgs.cs" />
     <Compile Include="src\Douyu.Messages\MessageException.cs" />
     <Compile Include="src\frmMain.cs">
       <SubType>Form</SubType>

@@ -8,7 +8,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Douyu.Messsages;
-using Douyu.Events;
 using Jack4net.Log;
 using Jack4net;
 using System.IO;
@@ -54,7 +53,7 @@ namespace Douyu.Client
                 return;
             }
 
-            LogService.Default.Info("[Barrage] start collect");
+            LogService.Info("[Barrage] start collect");
             RoomId = roomId;
             ConnectServer();
             LoginRoom(roomId);
@@ -63,6 +62,8 @@ namespace Douyu.Client
             DbService.SetCollecting(roomId, true);
             IsPlaying = true;
             _stopListen = false;
+            var messageText = "";
+            var messageItems = new Dictionary<string, string>();
             while (!_stopListen) {
                 var swAll = Stopwatch.StartNew();
                 try {
@@ -70,42 +71,42 @@ namespace Douyu.Client
                     KeepLive();
 
                     // 尝试获取服务器消息
-                    var messageData = TryGetMessage();
-                    if (messageData == "") {
+                    if (!TryGetMessage(out messageText)) {
                         MyThread.Wait(100);
                         continue;
                     }
 
                     // 获取message items
-                    var messageItems = GetMessageItems(messageData);
-                    if (messageItems == null) continue;
+                    if (!TryParseMessage(messageText, out messageItems)) {
+                        continue;
+                    }
 
                     // 发现有些服务器消息没有type项目, 如收到过: pingreq@=loginping/tick@=1516676439963/
                     if (!messageItems.ContainsKey("type")) {
-                        LogService.GetLogger("Error").Error("服务器发送的消息没有type项: " + messageData);
+                        LogService.GetLogger("Error").Error("服务器发送的消息没有type项: " + messageText);
                         continue;
                     }
 
                     // 处理各种消息
                     switch (messageItems["type"].ToLower()) {
                         case "chatmsg":
-                            ChatMessage chatMessage = new ChatMessage(messageData);
+                            ChatMessage chatMessage = new ChatMessage(messageText);
                             DbService.SaveChatMessage(chatMessage);
                             OnChatMessageRecieved(chatMessage);
                             break;
                         case "dgb":
-                            GiftMessage giftMessage = new GiftMessage(messageData);
+                            GiftMessage giftMessage = new GiftMessage(messageText);
                             DbService.SaveGiftMessage(giftMessage);
                             OnGiftMessageRecieved(giftMessage);
                             break;
                         case "bc_buy_deserve":
-                            ChouqinMessage chouqinMessage = new ChouqinMessage(messageData);
+                            ChouqinMessage chouqinMessage = new ChouqinMessage(messageText);
                             DbService.SaveChouqinMessage(chouqinMessage);
                             OnChouqinMessageRecieved(chouqinMessage);
                             break;
                         default:
-                            LogService.GetLogger("Debug").Debug("未处理的服务器消息: " + messageData);
-                            OnServerMessageRecieved(new ServerMessage(messageData));
+                            LogService.GetLogger("Debug").Debug("未处理的服务器消息: " + messageText);
+                            OnServerMessageRecieved(new ServerMessage(messageText));
                             break;
                     }
                 } catch (Exception ex) {
@@ -141,25 +142,28 @@ namespace Douyu.Client
 
         void ConnectServer()
         {
-            LogService.Default.Info("[Barrage] connect server");
             const string BARRAGE_SERVER = "openbarrage.douyutv.com"; // 第三方弹幕协议服务器地址
             const int BARRAGE_PORT = 8601; // 第三方弹幕协议服务器端口 
 
+            LogService.InfoFormat("[Barrage] 开始连接斗鱼服务器: {0}:{1}", BARRAGE_SERVER, BARRAGE_PORT);
             try {
                 var ipEndPoint = new IPEndPoint(Dns.GetHostAddresses(BARRAGE_SERVER)[0], BARRAGE_PORT);
                 _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 _socket.Connect(ipEndPoint);
                 if (!_socket.Connected) {
+                    LogService.Error("连接斗鱼服务器失败: " + ipEndPoint.ToString() + "\r\nNot Connected!");
                     throw new DouyuException("连接斗鱼服务器失败: " + ipEndPoint.ToString() + "\r\nNot Connected!");
                 }
             } catch (Exception e) {
-                throw new DouyuException("连接斗鱼服务器出错: " + e.Message);
+                LogService.Error("连接斗鱼服务器失败: " + e.Message, e);
+                throw new DouyuException("连接斗鱼服务器出错: " + e.Message, e);
             }
+            LogService.InfoFormat("[Barrage] 成功连接斗鱼服务器: {0}:{1}", BARRAGE_SERVER, BARRAGE_PORT);
         }
 
         void LoginRoom(string RoomId)
         {
-            LogService.Default.Info("[Barrage] login room " + RoomId);
+            LogService.Info("[Barrage] 登录房间: " + RoomId);
             SendMessage(new LoginreqMessage(RoomId));
 
             // 取消检查响应登录功能, 因为: 
@@ -170,15 +174,15 @@ namespace Douyu.Client
                 MyThread.Wait(100);
             } while (watch.ElapsedMilliseconds < 3 * 1000);
 
-            var loginres = TryGetMessage();
-            if (!loginres.Contains("type@=loginres")) {
+            var loginres = "";
+            if (!TryGetMessage(out loginres) || !loginres.Contains("type@=loginres")) {
                 LogService.GetLogger("Error").ErrorFormat("服务器没有响应登录信息, 服务器返回信息为: {0}", loginres);
             }
         }
 
         void JoinGroup(string RoomId)
         {
-            LogService.Default.Info("[Barrage] join group");
+            LogService.Info("[Barrage] join group");
             SendMessage(new JoinGroupMessage(RoomId));
         }
 
@@ -199,12 +203,13 @@ namespace Douyu.Client
         const int MAX_TIME_KEEP_LIVE = 40 * 1000;
         List<byte> _messageBufer = new List<byte>();
 
-        string TryGetMessage()
+        bool TryGetMessage(out string messageText)
         {
-            const int MAX_BUFFER_LENGTH = 4096;    // 设置字节获取buffer的最大值
+            const int MAX_BUFFER_LENGTH = 65536;    // 设置字节获取buffer的最大值
 
+            messageText = "";
             try {
-                // socket里面有数据
+                // 如果socket里面有数据, 先收了
                 if (_socket.Available > 0) {
                     var buffer = new byte[MAX_BUFFER_LENGTH];
                     var len = _socket.Receive(buffer);
@@ -213,28 +218,28 @@ namespace Douyu.Client
                     }
                 }
 
-                // 还不能解析出一个message
+                // 还不能拼出一个消息?
                 if (_messageBufer.Count < 4)
-                    return "";
-                var msgLen = _messageBufer[0] + _messageBufer[1] * 0x100 + _messageBufer[2] * 0x10000
-                    + _messageBufer[3] * 0x1000000 + 4;
-                if (_messageBufer.Count < msgLen) {
-                    return "";
+                    return false;
+                var msgTotalLen = 4 + _messageBufer[0] + _messageBufer[1] * 0x100 + _messageBufer[2] * 0x10000
+                    + _messageBufer[3] * 0x1000000;
+                if (_messageBufer.Count < msgTotalLen) {
+                    return false;
                 }
 
-                // 获取message字节
-                var messageBytes = new byte[msgLen];
-                _messageBufer.CopyTo(0, messageBytes, 0, msgLen);
-                _messageBufer.RemoveRange(0, msgLen);
+                // 获取字节消息
+                var messageBytes = new byte[msgTotalLen];
+                _messageBufer.CopyTo(0, messageBytes, 0, msgTotalLen);
+                _messageBufer.RemoveRange(0, msgTotalLen);
                 LogService.GetLogger("Message").Debug("[获得消息字节] " + messageBytes.ToHexString(" "));
 
-                // 转换成字符串
-                var message = UTF8Encoding.UTF8.GetString(messageBytes, 12, msgLen - 12).Trim('\0');
-                LogService.GetLogger("Message").Debug("[获得消息字串] " + message);
-                return message;
+                // 转换成字串消息
+                messageText = UTF8Encoding.UTF8.GetString(messageBytes, 12, msgTotalLen - 12).Trim('\0');
+                LogService.GetLogger("Message").Debug("[获得消息字串] " + messageText);
+                return true;
             } catch (Exception e) {
                 LogService.GetLogger("Error").Error("TryGetMessage Error: " + e.Message, e);
-                return "";
+                return false;
             }
         }
 
@@ -250,22 +255,24 @@ namespace Douyu.Client
 
         void ReConnect(string RoomId)
         {
-            LogService.Default.Info("[Barrage] reconnect douyu");
+            LogService.Info("[Barrage] reconnect douyu");
             if (_socket != null) _socket.Close();
             ConnectServer();
             LoginRoom(RoomId);
             JoinGroup(RoomId);
         }
 
-        Dictionary<string, string> GetMessageItems(string messageText)
+        bool TryParseMessage(string messageText, out Dictionary<string, string> messageItems)
         {
+            LogService.DebugFormat("开始解析服务器消息: {0}", messageText);
+            messageItems = new Dictionary<string, string>();
             try {
-                var messageItems = new Dictionary<string, string>();
                 foreach (var value in messageText.Split(new string[] { "/" }, StringSplitOptions.RemoveEmptyEntries)) {
                     var items = value.Split(new string[] { "@=" }, StringSplitOptions.None);
                     messageItems.Add(ReplaceKeyWord(items[0]), ReplaceKeyWord(items[1]));
                 }
-                return messageItems;
+                LogService.Debug("成功解析服务器消息!");
+                return true;
             } catch (Exception ex) {
                 // rid@=122402/sc@=325600/sctn@=0/rid@=-1/type@=qausrespond/
                 // roomset@=/catelv1@=/catelv2@=/type@=brafsn/rid@=122402/agc@=121/ftype@=0/rid@=122402/roomset@=/catelv1@=/catelv2@=/
@@ -273,10 +280,11 @@ namespace Douyu.Client
                 if (!messageText.Contains("type@=qausrespond") &&
                     !messageText.Contains("type@=brafsn") &&
                     !messageText.Contains("type@=rri")) {
-                    LogService.GetLogger("Error").ErrorFormat("解析服务器消息出错,  服务器消息 = {0}, 除错信息 = {1}",
+                    LogService.GetLogger("Error").ErrorFormat("解析服务器消息出错,  服务器消息 = {0}, 出错信息 = {1}",
                         messageText, ex.ToString());
                 }
-                return null;
+                LogService.Error("解析服务器消息失败!", ex);
+                return false;
             }
         }
 

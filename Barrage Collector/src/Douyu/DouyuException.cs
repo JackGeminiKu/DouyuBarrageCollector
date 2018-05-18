@@ -10,5 +10,9 @@ namespace Douyu
         public DouyuException(String message)
             : base(message)
         { }
+
+        public DouyuException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
     }
 }

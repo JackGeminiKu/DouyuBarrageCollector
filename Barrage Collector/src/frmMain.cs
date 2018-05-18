@@ -11,7 +11,6 @@ using System.IO;
 using System.Reflection;
 using Douyu.Messsages;
 using Jack4net;
-using Douyu.Events;
 using Jack4net.Log;
 using System.Configuration;
 using System.Diagnostics;
