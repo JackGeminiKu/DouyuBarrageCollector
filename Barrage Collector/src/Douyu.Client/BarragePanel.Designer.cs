@@ -35,6 +35,7 @@
             this.tabPageDebug = new System.Windows.Forms.TabPage();
             this.bwBarrageCollector = new System.ComponentModel.BackgroundWorker();
             this.gbControlBoard = new System.Windows.Forms.GroupBox();
+            this.chkSimpleMode = new System.Windows.Forms.CheckBox();
             this.btnSaveRoom = new System.Windows.Forms.Button();
             this.chkShowAllServerMessage = new System.Windows.Forms.CheckBox();
             this.cboRoomId = new System.Windows.Forms.ComboBox();
@@ -42,7 +43,7 @@
             this.btnStartListen = new System.Windows.Forms.Button();
             this.lblRoomId = new System.Windows.Forms.Label();
             this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
-            this.chkSimpleMode = new System.Windows.Forms.CheckBox();
+            this.chkShowGift = new System.Windows.Forms.CheckBox();
             this.tabControl.SuspendLayout();
             this.tabPageServerMessage.SuspendLayout();
             this.tabPageClienMessage.SuspendLayout();
@@ -64,7 +65,7 @@
             this.tabControl.Multiline = true;
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
-            this.tabControl.Size = new System.Drawing.Size(599, 221);
+            this.tabControl.Size = new System.Drawing.Size(640, 221);
             this.tabControl.TabIndex = 3;
             // 
             // tabPageServerMessage
@@ -74,7 +75,7 @@
             this.tabPageServerMessage.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.tabPageServerMessage.Name = "tabPageServerMessage";
             this.tabPageServerMessage.Padding = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.tabPageServerMessage.Size = new System.Drawing.Size(591, 191);
+            this.tabPageServerMessage.Size = new System.Drawing.Size(632, 191);
             this.tabPageServerMessage.TabIndex = 1;
             this.tabPageServerMessage.Text = "服务器消息";
             this.tabPageServerMessage.UseVisualStyleBackColor = true;
@@ -89,7 +90,7 @@
             this.txtServerMessage.Name = "txtServerMessage";
             this.txtServerMessage.ReadOnly = true;
             this.txtServerMessage.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtServerMessage.Size = new System.Drawing.Size(585, 183);
+            this.txtServerMessage.Size = new System.Drawing.Size(626, 183);
             this.txtServerMessage.TabIndex = 0;
             this.txtServerMessage.WordWrap = false;
             // 
@@ -132,6 +133,7 @@
             // 
             // gbControlBoard
             // 
+            this.gbControlBoard.Controls.Add(this.chkShowGift);
             this.gbControlBoard.Controls.Add(this.chkSimpleMode);
             this.gbControlBoard.Controls.Add(this.btnSaveRoom);
             this.gbControlBoard.Controls.Add(this.chkShowAllServerMessage);
@@ -144,10 +146,22 @@
             this.gbControlBoard.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.gbControlBoard.Name = "gbControlBoard";
             this.gbControlBoard.Padding = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.gbControlBoard.Size = new System.Drawing.Size(599, 42);
+            this.gbControlBoard.Size = new System.Drawing.Size(640, 42);
             this.gbControlBoard.TabIndex = 4;
             this.gbControlBoard.TabStop = false;
             this.gbControlBoard.Text = "选择房间";
+            // 
+            // chkSimpleMode
+            // 
+            this.chkSimpleMode.AutoSize = true;
+            this.chkSimpleMode.Checked = true;
+            this.chkSimpleMode.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkSimpleMode.Location = new System.Drawing.Point(362, 22);
+            this.chkSimpleMode.Name = "chkSimpleMode";
+            this.chkSimpleMode.Size = new System.Drawing.Size(74, 17);
+            this.chkSimpleMode.TabIndex = 8;
+            this.chkSimpleMode.Text = "简单模式";
+            this.chkSimpleMode.UseVisualStyleBackColor = true;
             // 
             // btnSaveRoom
             // 
@@ -162,7 +176,7 @@
             // chkShowAllServerMessage
             // 
             this.chkShowAllServerMessage.AutoSize = true;
-            this.chkShowAllServerMessage.Location = new System.Drawing.Point(434, 22);
+            this.chkShowAllServerMessage.Location = new System.Drawing.Point(506, 22);
             this.chkShowAllServerMessage.Name = "chkShowAllServerMessage";
             this.chkShowAllServerMessage.Size = new System.Drawing.Size(134, 17);
             this.chkShowAllServerMessage.TabIndex = 6;
@@ -229,20 +243,18 @@
             this.tableLayoutPanel.RowCount = 2;
             this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 50F));
             this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel.Size = new System.Drawing.Size(605, 279);
+            this.tableLayoutPanel.Size = new System.Drawing.Size(646, 279);
             this.tableLayoutPanel.TabIndex = 5;
             // 
-            // chkSimpleMode
+            // chkShowGift
             // 
-            this.chkSimpleMode.AutoSize = true;
-            this.chkSimpleMode.Checked = true;
-            this.chkSimpleMode.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkSimpleMode.Location = new System.Drawing.Point(362, 22);
-            this.chkSimpleMode.Name = "chkSimpleMode";
-            this.chkSimpleMode.Size = new System.Drawing.Size(74, 17);
-            this.chkSimpleMode.TabIndex = 8;
-            this.chkSimpleMode.Text = "简单模式";
-            this.chkSimpleMode.UseVisualStyleBackColor = true;
+            this.chkShowGift.AutoSize = true;
+            this.chkShowGift.Location = new System.Drawing.Point(433, 22);
+            this.chkShowGift.Name = "chkShowGift";
+            this.chkShowGift.Size = new System.Drawing.Size(74, 17);
+            this.chkShowGift.TabIndex = 9;
+            this.chkShowGift.Text = "显示礼物";
+            this.chkShowGift.UseVisualStyleBackColor = true;
             // 
             // BarragePanel
             // 
@@ -250,7 +262,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tableLayoutPanel);
             this.Name = "BarragePanel";
-            this.Size = new System.Drawing.Size(605, 279);
+            this.Size = new System.Drawing.Size(646, 279);
             this.tabControl.ResumeLayout(false);
             this.tabPageServerMessage.ResumeLayout(false);
             this.tabPageServerMessage.PerformLayout();
@@ -281,5 +293,6 @@
         private System.Windows.Forms.CheckBox chkShowAllServerMessage;
         private System.Windows.Forms.Button btnSaveRoom;
         private System.Windows.Forms.CheckBox chkSimpleMode;
+        private System.Windows.Forms.CheckBox chkShowGift;
     }
 }

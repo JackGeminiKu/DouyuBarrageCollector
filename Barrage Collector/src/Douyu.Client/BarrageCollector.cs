@@ -81,12 +81,6 @@ namespace Douyu.Client
                         continue;
                     }
 
-                    // 发现有些服务器消息没有type项目, 如收到过: pingreq@=loginping/tick@=1516676439963/
-                    if (!messageItems.ContainsKey("type")) {
-                        LogService.GetLogger("Error").Error("服务器发送的消息没有type项: " + messageText);
-                        continue;
-                    }
-
                     // 处理各种消息
                     switch (messageItems["type"].ToLower()) {
                         case "chatmsg":
@@ -199,14 +193,13 @@ namespace Douyu.Client
             }
         }
 
-        Stopwatch _watch = new Stopwatch();
         const int MAX_TIME_KEEP_LIVE = 40 * 1000;
+        const int MAX_BUFFER_LENGTH = 65536;    // 设置字节获取buffer的最大值
+        Stopwatch _watch = new Stopwatch();
         List<byte> _messageBufer = new List<byte>();
 
         bool TryGetMessage(out string messageText)
         {
-            const int MAX_BUFFER_LENGTH = 65536;    // 设置字节获取buffer的最大值
-
             messageText = "";
             try {
                 // 如果socket里面有数据, 先收了
@@ -271,6 +264,13 @@ namespace Douyu.Client
                     var items = value.Split(new string[] { "@=" }, StringSplitOptions.None);
                     messageItems.Add(ReplaceKeyWord(items[0]), ReplaceKeyWord(items[1]));
                 }
+
+                // 发现有些服务器消息没有type项目, 如收到过: pingreq@=loginping/tick@=1516676439963/
+                if (!messageItems.ContainsKey("type")) {
+                    LogService.GetLogger("Error").Error("服务器发送的消息没有type项: " + messageText);
+                    return false;
+                }
+
                 LogService.Debug("成功解析服务器消息!");
                 return true;
             } catch (Exception ex) {

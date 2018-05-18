@@ -53,6 +53,8 @@ namespace Douyu.Client
 
         void barrageCollector_GiftMessageRecieved(object sender, MessageEventArgs<GiftMessage> e)
         {
+            if (!chkShowGift.Checked)
+                return;
             if (chkSimpleMode.Checked) {
                 AppendText(txtServerMessage, e.Message.GiftName);
             } else {
@@ -63,6 +65,8 @@ namespace Douyu.Client
 
         void barrageCollector_ChouqinMessageRecieved(object sender, MessageEventArgs<ChouqinMessage> e)
         {
+            if (!chkShowGift.Checked)
+                return;
             if (chkSimpleMode.Checked) {
                 AppendText(txtServerMessage, "酬勤{0}", e.Message.Level);
             } else {
