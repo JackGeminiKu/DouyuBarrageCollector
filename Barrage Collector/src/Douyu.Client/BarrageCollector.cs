@@ -99,21 +99,20 @@ namespace Douyu.Client
                             OnChouqinMessageRecieved(chouqinMessage);
                             break;
                         default:
-                            LogService.GetLogger("Debug").Debug("未处理的服务器消息: " + messageText);
                             OnServerMessageRecieved(new ServerMessage(messageText));
                             break;
                     }
                 } catch (Exception ex) {
                     if (ex is SocketException || ex is ObjectDisposedException) {
                         try {
-                            LogService.GetLogger("Error").ErrorFormat("网络异常, 准备断线重连: " + ex.Message, ex);
+                            LogService.WarnFormat("网络异常, 准备断线重连: " + ex.Message, ex);
                             ReConnect(roomId);  // 尝试断线重连: 有时候服务器会强制关闭连接!!!
                         } catch (Exception ex2) {
-                            LogService.GetLogger("Error").Error("ObjectDisposedException, 断线重连失败: " + ex2.Message, ex2);
+                            LogService.Fatal("ObjectDisposedException, 断线重连失败: " + ex2.Message, ex2);
                         }
                         continue;
                     }
-                    LogService.GetLogger("Error").Error("StartCollect Excpetion: " + ex.Message, ex);
+                    LogService.Error("StartCollect Excpetion: " + ex.Message, ex);
                 }
             }
             IsPlaying = false;
@@ -145,11 +144,11 @@ namespace Douyu.Client
                 _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 _socket.Connect(ipEndPoint);
                 if (!_socket.Connected) {
-                    LogService.Error("连接斗鱼服务器失败: " + ipEndPoint.ToString() + "\r\nNot Connected!");
+                    LogService.Fatal("连接斗鱼服务器失败: " + ipEndPoint.ToString() + "\r\nNot Connected!");
                     throw new DouyuException("连接斗鱼服务器失败: " + ipEndPoint.ToString() + "\r\nNot Connected!");
                 }
             } catch (Exception e) {
-                LogService.Error("连接斗鱼服务器失败: " + e.Message, e);
+                LogService.Fatal("连接斗鱼服务器失败: " + e.Message, e);
                 throw new DouyuException("连接斗鱼服务器出错: " + e.Message, e);
             }
             LogService.InfoFormat("[Barrage] 成功连接斗鱼服务器: {0}:{1}", BARRAGE_SERVER, BARRAGE_PORT);
@@ -170,7 +169,7 @@ namespace Douyu.Client
 
             var loginres = "";
             if (!TryGetMessage(out loginres) || !loginres.Contains("type@=loginres")) {
-                LogService.GetLogger("Error").ErrorFormat("服务器没有响应登录信息, 服务器返回信息为: {0}", loginres);
+                LogService.FatalFormat("服务器没有响应登录信息, 服务器返回信息为: {0}", loginres);
             }
         }
 
@@ -224,25 +223,25 @@ namespace Douyu.Client
                 var messageBytes = new byte[msgTotalLen];
                 _messageBufer.CopyTo(0, messageBytes, 0, msgTotalLen);
                 _messageBufer.RemoveRange(0, msgTotalLen);
-                LogService.GetLogger("Message").Debug("[获得消息字节] " + messageBytes.ToHexString(" "));
+                LogService.Debug("[获得消息字节] " + messageBytes.ToHexString(" "));
 
                 // 转换成字串消息
                 messageText = UTF8Encoding.UTF8.GetString(messageBytes, 12, msgTotalLen - 12).Trim('\0');
-                LogService.GetLogger("Message").Debug("[获得消息字串] " + messageText);
+                LogService.Info("[获得消息] " + messageText);
                 return true;
             } catch (Exception e) {
-                LogService.GetLogger("Error").Error("TryGetMessage Error: " + e.Message, e);
+                LogService.Error("TryGetMessage Error: " + e.Message, e);
                 return false;
             }
         }
 
         void SendMessage(ClientMessage clientMessage)
         {
-            LogService.GetLogger("Message").Debug("[发送消息] " + clientMessage.ToString());
+            LogService.Info("[发送消息] " + clientMessage.ToString());
             var messageBytes = clientMessage.MessgeBytes;
             var count = _socket.Send(messageBytes);
             if (count != messageBytes.Length)
-                LogService.GetLogger("Error").Error("发送数据不全: " + clientMessage.ToString());
+                LogService.Error("发送数据不全: " + clientMessage.ToString());
             OnClientMessageSent(clientMessage);
         }
 
@@ -267,7 +266,7 @@ namespace Douyu.Client
 
                 // 发现有些服务器消息没有type项目, 如收到过: pingreq@=loginping/tick@=1516676439963/
                 if (!messageItems.ContainsKey("type")) {
-                    LogService.GetLogger("Error").Error("服务器发送的消息没有type项: " + messageText);
+                    LogService.Warn("服务器发送的消息没有type项: " + messageText);
                     return false;
                 }
 
@@ -280,10 +279,10 @@ namespace Douyu.Client
                 if (!messageText.Contains("type@=qausrespond") &&
                     !messageText.Contains("type@=brafsn") &&
                     !messageText.Contains("type@=rri")) {
-                    LogService.GetLogger("Error").ErrorFormat("解析服务器消息出错,  服务器消息 = {0}, 出错信息 = {1}",
+                    LogService.ErrorFormat("解析服务器消息出错,  服务器消息 = {0}, 出错信息 = {1}",
                         messageText, ex.ToString());
                 }
-                LogService.Error("解析服务器消息失败!", ex);
+                LogService.Warn("解析服务器消息失败!", ex);
                 return false;
             }
         }

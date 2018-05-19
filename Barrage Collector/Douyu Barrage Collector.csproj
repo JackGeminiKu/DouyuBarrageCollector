@@ -56,13 +56,6 @@
     <ApplicationIcon>image\ant.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="INIFileParser">
-      <HintPath>..\..\Jack4net\Jack4net_3.5\dll\INIFileParser\INIFileParser.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Jack4net\Jack4net_4.0\dll\Json.NET\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
@@ -75,6 +68,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Class1.cs" />
     <Compile Include="src\Douyu.Client\BarragePanel.cs">
       <SubType>UserControl</SubType>
     </Compile>

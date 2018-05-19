@@ -35,13 +35,13 @@ namespace Douyu.Client
 
         void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
         {
-            LogService.GetLogger("Error").Error("未处理异常: " + e.Exception.Message, e.Exception);
+            LogService.Fatal("未处理异常: " + e.Exception.Message, e.Exception);
         }
 
         void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             Exception ex = e.ExceptionObject as Exception;
-            LogService.GetLogger("Error").Error("未处理异常: " + ex.Message, ex);
+            LogService.Fatal("未处理异常: " + ex.Message, ex);
         }
 
         void SetFormLocation()
