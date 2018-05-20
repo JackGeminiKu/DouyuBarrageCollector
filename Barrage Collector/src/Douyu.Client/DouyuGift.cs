@@ -30,7 +30,6 @@ namespace Douyu.Client
             UpdateGiftInfo();
         }
 
-
         static void UpdateGiftInfo()
         {
             var giftCategories = _connection.Query<DouyuGift>(@"select * from gift_category");
