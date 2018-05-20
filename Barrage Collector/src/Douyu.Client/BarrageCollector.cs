@@ -13,6 +13,9 @@ using Jack4net;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Data;
+using System.Data.SqlClient;
+using Dapper;
 
 namespace Douyu.Client
 {
@@ -30,14 +33,45 @@ namespace Douyu.Client
 
         public bool IsPlaying { get; private set; }
 
-        public static bool IsCollecting(string RoomId)
+        static IDbConnection _connection;
+
+        static BarrageCollector()
         {
-            return DbService.IsCollecting(RoomId);
+            _connection = new SqlConnection(Properties.Settings.Default.ConnectionString);
+            _connection.Open();
         }
 
-        public static void ClearCollectingStatus(string roomId)
+        public static bool IsCollecting(string roomId)
         {
-            DbService.SetCollecting(roomId, false);
+            var rows = _connection.Query(
+                @"select is_collecting from room_status where room_id = @RoomId",
+                new { RoomId = roomId });
+            return rows.Count() == 1 && rows.First().is_collecting == true;
+        }
+
+        public static void SetCollecting(string roomId, bool isCollecting)
+        {
+            var roomStatus = _connection.Query(
+                @"select * from room_status where room_id = @RoomId",
+                new { RoomId = roomId });
+
+            if (roomStatus.Count() != 0) {
+                var count = _connection.Execute(
+                    @"update room_status set is_collecting = @IsCollecting where room_id = @RoomId",
+                    new { IsCollecting = isCollecting, RoomId = roomId });
+                if (count != 1) {
+                    LogService.ErrorFormat("SetCollecting 失败: 影响的行数不为1!");
+                    return;
+                }
+            } else {
+                var count = _connection.Execute(
+                    @"insert into room_status(room_id, is_collecting) values(@RoomId, @IsCollecting)",
+                    new { RoomId = roomId, IsCollecting = isCollecting });
+                if (count != 1) {
+                    LogService.ErrorFormat("SetCollecting 失败: 影响的行数不为1!");
+                    return;
+                }
+            }
         }
 
         public void StartCollect(string roomId)
@@ -47,7 +81,7 @@ namespace Douyu.Client
                 return;
             }
 
-            if (DbService.IsCollecting(roomId)) {
+            if (BarrageCollector.IsCollecting(roomId)) {
                 MessageBox.Show(string.Format("收集房间弹幕失败: 房间{0}已经处于收集状态了!", roomId), "开始收集弹幕",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -59,7 +93,7 @@ namespace Douyu.Client
             LoginRoom(roomId);
             JoinGroup(roomId);
 
-            DbService.SetCollecting(roomId, true);
+            BarrageCollector.SetCollecting(roomId, true);
             IsPlaying = true;
             _stopListen = false;
             var messageText = "";
@@ -85,17 +119,17 @@ namespace Douyu.Client
                     switch (messageItems["type"].ToLower()) {
                         case "chatmsg":
                             ChatMessage chatMessage = new ChatMessage(messageText);
-                            DbService.SaveChatMessage(chatMessage);
+                            ChatMessage.Save(chatMessage);
                             OnChatMessageRecieved(chatMessage);
                             break;
                         case "dgb":
                             GiftMessage giftMessage = new GiftMessage(messageText);
-                            DbService.SaveGiftMessage(giftMessage);
+                            GiftMessage.Save(giftMessage);
                             OnGiftMessageRecieved(giftMessage);
                             break;
                         case "bc_buy_deserve":
                             ChouqinMessage chouqinMessage = new ChouqinMessage(messageText);
-                            DbService.SaveChouqinMessage(chouqinMessage);
+                            ChouqinMessage.Save(chouqinMessage);
                             OnChouqinMessageRecieved(chouqinMessage);
                             break;
                         default:
@@ -127,7 +161,7 @@ namespace Douyu.Client
 
             try {
                 SendMessage(new LogoutMessage());
-                DbService.SetCollecting(RoomId, false);
+                BarrageCollector.SetCollecting(RoomId, false);
             } catch (Exception ex) {
                 throw new DouyuException("登出失败: " + ex.Message);
             }

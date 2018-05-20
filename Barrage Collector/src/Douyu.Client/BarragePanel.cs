@@ -101,9 +101,9 @@ namespace Douyu.Client
 
         void StartCollect()
         {
-            var RoomId = cboRoomId.Text;
-            if (BarrageCollector.IsCollecting(RoomId)) {
-                MessageBox.Show(string.Format("房间{0}已经处于收集状态了!", RoomId), "开始收集",
+            var roomId = cboRoomId.Text;
+            if (BarrageCollector.IsCollecting(roomId)) {
+                MessageBox.Show(string.Format("房间{0}已经处于收集状态了!", roomId), "开始收集",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
                 var password = "";
@@ -114,7 +114,7 @@ namespace Douyu.Client
                     MessageBox.Show("密码错误");
                     return;
                 }
-                BarrageCollector.ClearCollectingStatus(RoomId);
+                BarrageCollector.SetCollecting(roomId, false);
             }
 
             if (bwBarrageCollector.IsBusy) {

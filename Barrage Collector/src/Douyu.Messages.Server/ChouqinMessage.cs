@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Douyu.Messages;
+using Dapper;
+using Jack4net.Log;
+using System.Data;
+using System.Data.SqlClient;
 
 namespace Douyu.Messsages
 {
@@ -34,5 +38,39 @@ namespace Douyu.Messsages
         public string BadgeName { get; private set; }
         public byte BadgeLevel { get; private set; }
         public int BadgeRoom { get; private set; }
+
+        public override string ToString()
+        {
+            return "酬勤" + Level;
+        }
+
+        static IDbConnection _connection;
+
+        static ChouqinMessage()
+        {
+            _connection = new SqlConnection(Properties.Settings.Default.ConnectionString);
+            _connection.Open();
+        }
+
+        public static void Save(ChouqinMessage message)
+        {
+            var count = _connection.Execute(
+                "insert into chouqin_message([time], [room_id], [level], [count], [hits], [user_id], [user_level], [badge_name], [badge_level], [badge_room]) " +
+                "values(@Time, @RoomId, @Level, @Count, @Hits, @UserId, @UserLevel, @BadgeName, @BadgeLevel, @BadgeRoom)",
+                new {
+                    Time = DateTime.Now,
+                    RoomId = message.RoomId,
+                    Level = message.Level,
+                    Count = message.Count,
+                    Hits = message.Hits,
+                    UserId = message.UserId,
+                    UserLevel = message.UserLevel,
+                    BadgeName = message.BadgeName,
+                    BadgeLevel = message.BadgeLevel,
+                    BadgeRoom = message.BadgeRoom
+                });
+            if (count != 1)
+                LogService.Info("保存酬勤失败: 返回值不为1!");
+        }
     }
 }

@@ -4,6 +4,10 @@ using System.Linq;
 using System.Text;
 using Douyu.Client;
 using Douyu.Messages;
+using System.Data.SqlClient;
+using System.Data;
+using Jack4net.Log;
+using Dapper;
 
 namespace Douyu.Messsages
 {
@@ -38,8 +42,8 @@ namespace Douyu.Messsages
         {
             get
             {
-                Dictionary<string, object> giftInfo = DbService.QueryGiftInfo(GiftId);
-                return giftInfo == null ? GiftId.ToString() : (string)giftInfo["name"];
+                DouyuGift giftInfo = DouyuGift.Get(GiftId);
+                return giftInfo == null ? GiftId.ToString() : giftInfo.name;
             }
         }
 
@@ -51,6 +55,36 @@ namespace Douyu.Messsages
         public override string ToString()
         {
             return string.Format("{0}: {1}", UserName, GiftName);
+        }
+
+        static IDbConnection _connection;
+
+        static GiftMessage()
+        {
+            _connection = new SqlConnection(Properties.Settings.Default.ConnectionString);
+            _connection.Open();
+        }
+
+        public static void Save(GiftMessage giftMessage)
+        {
+            var count = _connection.Execute(
+                "insert into gift_message(time, room_id, user_id, user_name, user_level, weight, gift_id, hits, badge_name, badge_level, badge_room) " +
+                "values(@Time, @RoomId, @UserId, @UserName, @UserLevel, @Weight, @GiftId, @Hits, @BadgeName, @BadgeLevel, @BadgeRoom)",
+                new {
+                    Time = DateTime.Now,
+                    RoomId = giftMessage.RoomId,
+                    UserId = giftMessage.UserId,
+                    UserName = giftMessage.UserName,
+                    UserLevel = giftMessage.UserLevel,
+                    Weight = giftMessage.Weight,
+                    GiftId = giftMessage.GiftId,
+                    Hits = giftMessage.Hits,
+                    BadgeName = giftMessage.BadgeName,
+                    BadgeLevel = giftMessage.BadgeLevel,
+                    BadgeRoom = giftMessage.BadgeRoomId
+                });
+            if (count != 1)
+                LogService.InfoFormat("保存礼物失败: 返回值不为1!");
         }
     }
 }

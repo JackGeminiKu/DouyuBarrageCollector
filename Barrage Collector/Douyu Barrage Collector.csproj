@@ -56,6 +56,10 @@
     <ApplicationIcon>image\ant.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Dapper">
+      <HintPath>..\..\Jack4net-2.0\Jack4net\dll\Dapper\Dapper.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
@@ -74,7 +78,7 @@
     <Compile Include="src\Douyu.Client\BarragePanel.Designer.cs">
       <DependentUpon>BarragePanel.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Douyu.Client\DbService.cs" />
+    <Compile Include="src\Douyu.Client\DouyuGift.cs" />
     <Compile Include="src\Douyu.Client\MessageEventArgs.cs" />
     <Compile Include="src\Douyu.Client\ScoreAddedEventArgs.cs" />
     <Compile Include="src\Douyu.Messages\MessageException.cs" />

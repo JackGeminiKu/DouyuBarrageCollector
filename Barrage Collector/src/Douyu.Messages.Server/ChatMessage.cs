@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Douyu.Messages;
+using System.Data;
+using System.Data.SqlClient;
+using Dapper;
+using Jack4net.Log;
 
 namespace Douyu.Messsages
 {
@@ -36,6 +40,35 @@ namespace Douyu.Messsages
         public override string ToString()
         {
             return Text;
+        }
+
+        static IDbConnection _connection;
+
+        static ChatMessage()
+        {
+            _connection = new SqlConnection(Properties.Settings.Default.ConnectionString);
+            _connection.Open();
+        }
+
+        public static void Save(ChatMessage chatMessage)
+        {
+            var count = _connection.Execute(
+                @"insert into chat_message" +
+                "(time, text, room_id, user_id, user_name, user_level, badge_name, badge_level, badge_room) " +
+                "values(@Time, @Text, @RoomId, @UserId, @UserName, @UserLevel, @BadgeName, @BadgeLevel, @BadgeRoom)",
+                new {
+                    Time = DateTime.Now,
+                    Text = chatMessage.Text.Replace(@"'", @"''"),
+                    RoomId = chatMessage.RoomId,
+                    UserId = chatMessage.UserId,
+                    UserName = chatMessage.UserName,
+                    UserLevel = chatMessage.UserLevel,
+                    BadgeName = chatMessage.BadgeName,
+                    BadgeLevel = chatMessage.BadgeLevel,
+                    BadgeRoom = chatMessage.BadgeRoomId
+                });
+            if (count != 1)
+                LogService.Info("保存弹幕失败: 返回值不为1!");
         }
     }
 }
