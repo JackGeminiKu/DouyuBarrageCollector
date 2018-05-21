@@ -87,8 +87,8 @@ namespace Douyu.Client
                 return;
             }
 
-            LogService.Info("[Barrage] start collect");
             RoomId = roomId;
+            LogService.Info("[Barrage] start collect");
             ConnectServer();
             LoginRoom(roomId);
             JoinGroup(roomId);
@@ -179,11 +179,11 @@ namespace Douyu.Client
                 _socket.Connect(ipEndPoint);
                 if (!_socket.Connected) {
                     LogService.Fatal("连接斗鱼服务器失败: " + ipEndPoint.ToString() + "\r\nNot Connected!");
-                    throw new DouyuException("连接斗鱼服务器失败: " + ipEndPoint.ToString() + "\r\nNot Connected!");
+                    throw new DouyuException("连接斗鱼服务器失败!");
                 }
             } catch (Exception e) {
                 LogService.Fatal("连接斗鱼服务器失败: " + e.Message, e);
-                throw new DouyuException("连接斗鱼服务器出错: " + e.Message, e);
+                throw new DouyuException("连接斗鱼服务器失败!");
             }
             LogService.InfoFormat("[Barrage] 成功连接斗鱼服务器: {0}:{1}", BARRAGE_SERVER, BARRAGE_PORT);
         }
@@ -204,13 +204,19 @@ namespace Douyu.Client
             var loginres = "";
             if (!TryGetMessage(out loginres) || !loginres.Contains("type@=loginres")) {
                 LogService.FatalFormat("服务器没有响应登录信息, 服务器返回信息为: {0}", loginres);
+                throw new DouyuException("登录房间失败!");
             }
         }
 
         void JoinGroup(string RoomId)
         {
-            LogService.Info("[Barrage] join group");
-            SendMessage(new JoinGroupMessage(RoomId));
+            try {
+                LogService.Info("[Barrage] join group");
+                SendMessage(new JoinGroupMessage(RoomId));
+            } catch (Exception ex) {
+                throw new DouyuException("加入房间分组失败!", ex);
+            }
+
         }
 
         void KeepLive()
