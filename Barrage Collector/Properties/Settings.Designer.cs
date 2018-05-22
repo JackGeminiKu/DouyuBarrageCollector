@@ -37,8 +37,7 @@ namespace Douyu.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("data source=localhost\\SQLSERVER2008;initial catalog=Douyu2;integrated security=fa" +
-            "lse;persist security info=True;User ID=sa;Password=52664638")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=10.0.0.2;Initial Catalog=Douyu2;User ID=sa;Password=Jack52664638")]
         public string ConnectionString {
             get {
                 return ((string)(this["ConnectionString"]));
