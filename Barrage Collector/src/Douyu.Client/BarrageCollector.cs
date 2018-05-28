@@ -139,7 +139,7 @@ namespace Douyu.Client
                 } catch (Exception ex) {
                     if (ex is SocketException || ex is ObjectDisposedException) {
                         try {
-                            LogService.WarnFormat("网络异常, 准备断线重连: " + ex.Message, ex);
+                            LogService.Warn("网络异常, 准备断线重连: " + ex.Message, ex);
                             ReConnect(roomId);  // 尝试断线重连: 有时候服务器会强制关闭连接!!!
                         } catch (Exception ex2) {
                             LogService.Fatal("ObjectDisposedException, 断线重连失败: " + ex2.Message, ex2);
