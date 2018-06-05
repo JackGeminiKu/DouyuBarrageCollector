@@ -68,7 +68,7 @@ namespace Douyu.Messsages
         public static void Save(GiftMessage giftMessage)
         {
             var count = _connection.Execute(
-                "insert into gift_message(time, room_id, user_id, user_name, user_level, weight, gift_id, hits, badge_name, badge_level, badge_room) " +
+                "insert into GiftMessage(Time, RoomId, UserId, UserName, UserLevel, Weight, GiftId, Hits, BadgeName, BadgeLevel, BadgeRoom) " +
                 "values(@Time, @RoomId, @UserId, @UserName, @UserLevel, @Weight, @GiftId, @Hits, @BadgeName, @BadgeLevel, @BadgeRoom)",
                 new {
                     Time = DateTime.Now,

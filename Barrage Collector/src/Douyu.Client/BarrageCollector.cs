@@ -38,35 +38,38 @@ namespace Douyu.Client
         static BarrageCollector()
         {
             _connection = new SqlConnection(Properties.Settings.Default.ConnectionString);
-            _connection.Open();
         }
 
         public static bool IsCollecting(string roomId)
         {
             var rows = _connection.Query(
-                @"select is_collecting from room_status where room_id = @RoomId",
-                new { RoomId = roomId });
-            return rows.Count() == 1 && rows.First().is_collecting == true;
+                @"select IsCollecting from RoomStatus where RoomId = @RoomId",
+                new { RoomId = roomId }
+            );
+            return rows.Count() == 1 && rows.First().IsCollecting == true;
         }
 
         public static void SetCollecting(string roomId, bool isCollecting)
         {
             var roomStatus = _connection.Query(
-                @"select * from room_status where room_id = @RoomId",
-                new { RoomId = roomId });
+                @"select * from RoomStatus where RoomId = @RoomId",
+                new { RoomId = roomId }
+            );
 
             if (roomStatus.Count() != 0) {
                 var count = _connection.Execute(
-                    @"update room_status set is_collecting = @IsCollecting where room_id = @RoomId",
-                    new { IsCollecting = isCollecting, RoomId = roomId });
+                    @"update RoomStatus set IsCollecting = @IsCollecting where RoomId = @RoomId",
+                    new { IsCollecting = isCollecting, RoomId = roomId }
+                );
                 if (count != 1) {
                     LogService.ErrorFormat("SetCollecting 失败: 影响的行数不为1!");
                     return;
                 }
             } else {
                 var count = _connection.Execute(
-                    @"insert into room_status(room_id, is_collecting) values(@RoomId, @IsCollecting)",
-                    new { RoomId = roomId, IsCollecting = isCollecting });
+                    @"insert into RoomStatus(RoomId, IsCollecting) values(@RoomId, @IsCollecting)",
+                    new { RoomId = roomId, IsCollecting = isCollecting }
+                );
                 if (count != 1) {
                     LogService.ErrorFormat("SetCollecting 失败: 影响的行数不为1!");
                     return;
@@ -82,13 +85,15 @@ namespace Douyu.Client
             }
 
             if (BarrageCollector.IsCollecting(roomId)) {
-                MessageBox.Show(string.Format("收集房间弹幕失败: 房间{0}已经处于收集状态了!", roomId), "开始收集弹幕",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(
+                    string.Format("收集房间弹幕失败: 房间{0}已经处于收集状态了!", roomId), "开始收集弹幕",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error
+                );
                 return;
             }
 
             RoomId = roomId;
-            LogService.Info("[Barrage] start collect");
+            LogService.Info("Start collect");
             ConnectServer();
             LoginRoom(roomId);
             JoinGroup(roomId);
@@ -142,7 +147,7 @@ namespace Douyu.Client
                             LogService.Warn("网络异常, 准备断线重连: " + ex.Message, ex);
                             ReConnect(roomId);  // 尝试断线重连: 有时候服务器会强制关闭连接!!!
                         } catch (Exception ex2) {
-                            LogService.Fatal("ObjectDisposedException, 断线重连失败: " + ex2.Message, ex2);
+                            LogService.Fatal("断线重连失败: " + ex2.Message, ex2);
                         }
                         continue;
                     }
@@ -172,7 +177,7 @@ namespace Douyu.Client
             const string BARRAGE_SERVER = "openbarrage.douyutv.com"; // 第三方弹幕协议服务器地址
             const int BARRAGE_PORT = 8601; // 第三方弹幕协议服务器端口 
 
-            LogService.InfoFormat("[Barrage] 开始连接斗鱼服务器: {0}:{1}", BARRAGE_SERVER, BARRAGE_PORT);
+            LogService.InfoFormat("开始连接斗鱼服务器: {0}:{1}", BARRAGE_SERVER, BARRAGE_PORT);
             try {
                 var ipEndPoint = new IPEndPoint(Dns.GetHostAddresses(BARRAGE_SERVER)[0], BARRAGE_PORT);
                 _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -185,12 +190,12 @@ namespace Douyu.Client
                 LogService.Fatal("连接斗鱼服务器失败: " + e.Message, e);
                 throw new DouyuException("连接斗鱼服务器失败!");
             }
-            LogService.InfoFormat("[Barrage] 成功连接斗鱼服务器: {0}:{1}", BARRAGE_SERVER, BARRAGE_PORT);
+            LogService.InfoFormat("成功连接斗鱼服务器: {0}:{1}", BARRAGE_SERVER, BARRAGE_PORT);
         }
 
         void LoginRoom(string RoomId)
         {
-            LogService.Info("[Barrage] 登录房间: " + RoomId);
+            LogService.Info("登录房间: " + RoomId);
             SendMessage(new LoginreqMessage(RoomId));
 
             // 取消检查响应登录功能, 因为: 
@@ -199,7 +204,7 @@ namespace Douyu.Client
             do {
                 if (_socket.Available > 0) break;
                 MyThread.Wait(100);
-            } while (watch.ElapsedMilliseconds < 3 * 1000);
+            } while (watch.ElapsedMilliseconds < 3000);
 
             var loginres = "";
             if (!TryGetMessage(out loginres) || !loginres.Contains("type@=loginres")) {
@@ -211,7 +216,7 @@ namespace Douyu.Client
         void JoinGroup(string RoomId)
         {
             try {
-                LogService.Info("[Barrage] join group");
+                LogService.Info("加入房间分组");
                 SendMessage(new JoinGroupMessage(RoomId));
             } catch (Exception ex) {
                 throw new DouyuException("加入房间分组失败!", ex);
@@ -227,6 +232,7 @@ namespace Douyu.Client
             }
 
             if (_watch.ElapsedMilliseconds > MAX_TIME_KEEP_LIVE) {
+                LogService.Debug("发送心跳消息");
                 SendMessage(new KeepLiveMessage());
                 _watch.Restart();
             }
@@ -263,11 +269,11 @@ namespace Douyu.Client
                 var messageBytes = new byte[msgTotalLen];
                 _messageBufer.CopyTo(0, messageBytes, 0, msgTotalLen);
                 _messageBufer.RemoveRange(0, msgTotalLen);
-                LogService.Debug("[获得消息字节] " + messageBytes.ToHexString(" "));
+                LogService.Debug("获得消息字节: " + messageBytes.ToHexString(" "));
 
                 // 转换成字串消息
                 messageText = UTF8Encoding.UTF8.GetString(messageBytes, 12, msgTotalLen - 12).Trim('\0');
-                LogService.Info("[获得消息] " + messageText);
+                LogService.Info("获得消息: " + messageText);
                 return true;
             } catch (Exception e) {
                 LogService.Error("TryGetMessage Error: " + e.Message, e);
@@ -277,7 +283,7 @@ namespace Douyu.Client
 
         void SendMessage(ClientMessage clientMessage)
         {
-            LogService.Info("[发送消息] " + clientMessage.ToString());
+            LogService.Info("发送消息: " + clientMessage.ToString());
             var messageBytes = clientMessage.MessgeBytes;
             var count = _socket.Send(messageBytes);
             if (count != messageBytes.Length)
@@ -287,7 +293,7 @@ namespace Douyu.Client
 
         void ReConnect(string RoomId)
         {
-            LogService.Info("[Barrage] reconnect douyu");
+            LogService.Info("重新连接");
             if (_socket != null) _socket.Close();
             ConnectServer();
             LoginRoom(RoomId);

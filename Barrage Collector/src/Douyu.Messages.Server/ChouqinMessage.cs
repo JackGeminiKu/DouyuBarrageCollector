@@ -55,7 +55,7 @@ namespace Douyu.Messsages
         public static void Save(ChouqinMessage message)
         {
             var count = _connection.Execute(
-                "insert into chouqin_message([time], [room_id], [level], [count], [hits], [user_id], [user_level], [badge_name], [badge_level], [badge_room]) " +
+                "insert into ChouqinMessage([Time], [RoomId], [Level], [Count], [Hits], [UserId], [UserLevel], [BadgeName], [BadgeLevel], [BadgeRoom]) " +
                 "values(@Time, @RoomId, @Level, @Count, @Hits, @UserId, @UserLevel, @BadgeName, @BadgeLevel, @BadgeRoom)",
                 new {
                     Time = DateTime.Now,

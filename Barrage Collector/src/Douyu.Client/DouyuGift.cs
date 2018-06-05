@@ -32,7 +32,7 @@ namespace Douyu.Client
 
         static void UpdateGiftInfo()
         {
-            var giftCategories = _connection.Query<DouyuGift>(@"select * from gift_category");
+            var giftCategories = _connection.Query<DouyuGift>(@"select * from GiftCategory");
             foreach (var giftInfo in giftCategories) {
                 _gifts.Add(giftInfo.Id, giftInfo);
             }
@@ -45,7 +45,7 @@ namespace Douyu.Client
             }
 
             var giftInfoList = _connection.Query<DouyuGift>(
-                @"select * from gift_category where id = @GiftId",
+                @"select * from GiftCategory where Id = @GiftId",
                 new { GiftId = giftId });
             if (giftInfoList.Count() == 0)
                 return null;

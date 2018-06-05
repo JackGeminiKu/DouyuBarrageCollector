@@ -53,8 +53,8 @@ namespace Douyu.Messsages
         public static void Save(ChatMessage chatMessage)
         {
             var count = _connection.Execute(
-                @"insert into chat_message" +
-                "(time, text, room_id, user_id, user_name, user_level, badge_name, badge_level, badge_room) " +
+                @"insert into ChatMessage" +
+                "(Time, Text, RoomId, UserId, UserName, UserLevel, BadgeName, BadgeLevel, BadgeRoom) " +
                 "values(@Time, @Text, @RoomId, @UserId, @UserName, @UserLevel, @BadgeName, @BadgeLevel, @BadgeRoom)",
                 new {
                     Time = DateTime.Now,
