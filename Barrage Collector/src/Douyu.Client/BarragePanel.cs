@@ -102,7 +102,7 @@ namespace Douyu.Client
         void StartCollect()
         {
             var roomId = cboRoomId.Text;
-            if (BarrageCollector.IsCollecting(roomId)) {
+            if (BarrageCollector.IsCollectingRoom(roomId)) {
                 MessageBox.Show(string.Format("房间{0}已经处于收集状态了!", roomId), "开始收集",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
@@ -114,7 +114,7 @@ namespace Douyu.Client
                     MessageBox.Show("密码错误");
                     return;
                 }
-                BarrageCollector.SetCollecting(roomId, false);
+                BarrageCollector.SetCollectingStatus(roomId, false);
             }
 
             if (bwBarrageCollector.IsBusy) {
@@ -147,7 +147,7 @@ namespace Douyu.Client
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
-            if (_barrageCollector.IsPlaying) _barrageCollector.StopCollect();
+            if (_barrageCollector.IsCollectiing) _barrageCollector.StopCollect();
             base.OnHandleDestroyed(e);
         }
 
