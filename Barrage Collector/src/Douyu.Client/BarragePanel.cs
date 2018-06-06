@@ -29,17 +29,18 @@ namespace Douyu.Client
             _barrageCollector.ServerMessageRecieved += barrageCollector_ServerMessageRecieved;
         }
 
-        ~BarragePanel()
+        protected override void OnHandleDestroyed(EventArgs e)
         {
             _barrageCollector.ChatMessageRecieved -= barrageCollector_ChatMessageRecieved;
             _barrageCollector.GiftMessageRecieved -= barrageCollector_GiftMessageRecieved;
             _barrageCollector.ChouqinMessageRecieved -= barrageCollector_ChouqinMessageRecieved;
             _barrageCollector.ClientMessageSent -= barrageCollector_ClientMessageSent;
             _barrageCollector.ServerMessageRecieved -= barrageCollector_ServerMessageRecieved;
-            _barrageCollector.StopCollect();
+            if (_barrageCollector.IsCollectiing) _barrageCollector.StopCollect();
+            base.OnHandleDestroyed(e);
         }
 
-        #region 弹幕消息
+        #region 事件处理 
 
         void barrageCollector_ChatMessageRecieved(object sender, MessageEventArgs<ChatMessage> e)
         {
@@ -86,6 +87,34 @@ namespace Douyu.Client
                 AppendText(txtServerMessage, "[Server Message]: \t{0}", e.Message.ToString());
         }
 
+        void btnStartCollect_Click(object sender, EventArgs e)
+        {
+            StartCollect();
+        }
+
+        void btnStopCollect_Click(object sender, EventArgs e)
+        {
+            StopCollect();
+        }
+
+        void cboRoomId_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == '\r')
+                btnStartListen.PerformClick();
+        }
+
+        void btnSaveRoom_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.SavedRoom = int.Parse(cboRoomId.Text);
+            Properties.Settings.Default.Save();
+            MessageBox.Show("房间" + cboRoomId.Text + "已经保存完成!", "保存房间", MessageBoxButtons.OK);
+        }
+
+        void bwBarrageCollector_DoWork(object sender, DoWorkEventArgs e)
+        {
+            _barrageCollector.StartCollect(cboRoomId.GetTextCrossThread());
+        }
+
         #endregion
 
         public void StartCollect(int room)
@@ -94,24 +123,21 @@ namespace Douyu.Client
             StartCollect();
         }
 
-        void btnStartCollect_Click(object sender, EventArgs e)
-        {
-            StartCollect();
-        }
-
         void StartCollect()
         {
             var roomId = cboRoomId.Text;
             if (BarrageCollector.IsCollectingRoom(roomId)) {
-                MessageBox.Show(string.Format("房间{0}已经处于收集状态了!", roomId), "开始收集",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(
+                    string.Format("房间{0}已经处于收集状态了!", roomId), "开始收集",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning
+                );
 
                 var password = "";
                 if (PasswordBox.ShowDialog("要强制清除收集状态, 开始收集? 请输入密码!", out password) == DialogResult.Cancel) {
                     return;
                 }
                 if (password != "52664638") {
-                    MessageBox.Show("密码错误");
+                    MessageBox.Show("密码错误", "密码", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
                 BarrageCollector.SetCollectingStatus(roomId, false);
@@ -127,28 +153,12 @@ namespace Douyu.Client
             bwBarrageCollector.RunWorkerAsync();
         }
 
-        void bwBarrageCollector_DoWork(object sender, DoWorkEventArgs e)
-        {
-            _barrageCollector.StartCollect(cboRoomId.GetTextCrossThread());
-        }
-
-        void btnStopCollect_Click(object sender, EventArgs e)
-        {
-            StopCollect();
-        }
-
         void StopCollect()
         {
             btnStartListen.Enabled = true;
             cboRoomId.Enabled = true;
             btnStopListen.Enabled = false;
             _barrageCollector.StopCollect();
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            if (_barrageCollector.IsCollectiing) _barrageCollector.StopCollect();
-            base.OnHandleDestroyed(e);
         }
 
         void AppendText(TextBox textBox, string message)
@@ -168,19 +178,6 @@ namespace Douyu.Client
         void AppendText(TextBox textBox, string format, params object[] args)
         {
             AppendText(textBox, string.Format(format, args));
-        }
-
-        void cboRoomId_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (e.KeyChar == '\r')
-                btnStartListen.PerformClick();
-        }
-
-        void btnSaveRoom_Click(object sender, EventArgs e)
-        {
-            Properties.Settings.Default.SavedRoom = int.Parse(cboRoomId.Text);
-            Properties.Settings.Default.Save();
-            MessageBox.Show("房间" + cboRoomId.Text + "已经保存完成!", "保存房间", MessageBoxButtons.OK);
         }
     }
 }

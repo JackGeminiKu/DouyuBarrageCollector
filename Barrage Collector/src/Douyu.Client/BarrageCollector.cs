@@ -322,7 +322,7 @@ namespace Douyu.Client
             messageItems = new Dictionary<string, string>();
             try {
                 foreach (var value in messageText.Split(new string[] { "/" }, StringSplitOptions.RemoveEmptyEntries)) {
-                    var items = value.Split(new string[] { "@=" }, StringSplitOptions.RemoveEmptyEntries);
+                    var items = value.Split(new string[] { "@=" }, StringSplitOptions.None);
                     messageItems.Add(ReplaceKeyWord(items[0]), ReplaceKeyWord(items[1]));
                 }
 
@@ -361,13 +361,6 @@ namespace Douyu.Client
         public event EventHandler<MessageEventArgs<ChouqinMessage>> ChouqinMessageRecieved;
         public event EventHandler<MessageEventArgs<ClientMessage>> ClientMessageSent;
         public event EventHandler<MessageEventArgs<ServerMessage>> ServerMessageRecieved;
-        public event EventHandler<ScoreAddedEventArgs> ScoreAdded;
-
-        protected void OnScoreAdded(ScoreAddedEventArgs args)
-        {
-            if (ScoreAdded != null)
-                ScoreAdded(this, args);
-        }
 
         protected void OnChatMessageRecieved(ChatMessage chatMessage)
         {

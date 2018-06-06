@@ -43,7 +43,7 @@ namespace Douyu.Messsages
             get
             {
                 DouyuGift giftInfo = DouyuGift.Get(GiftId);
-                return giftInfo == null ? GiftId.ToString() : giftInfo.name;
+                return giftInfo == null ? GiftId.ToString() : giftInfo.Name;
             }
         }
 

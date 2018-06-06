@@ -11,14 +11,14 @@ namespace Douyu.Client
     public class DouyuGift
     {
         public int Id { get; set; }
-        public string name { get; set; }
-        public float price { get; set; }
-        public float experience { get; set; }
-        public string description { get; set; }
-        public string introduction { get; set; }
-        public string mimg { get; set; }
-        public string himg { get; set; }
-        public DateTime update_time { get; set; }
+        public string Name { get; set; }
+        public float Price { get; set; }
+        public float Experience { get; set; }
+        public string Description { get; set; }
+        public string Introduction { get; set; }
+        public string Mimg { get; set; }
+        public string Himg { get; set; }
+        public DateTime UpdateTime { get; set; }
 
         static IDbConnection _connection;
         static Dictionary<int, DouyuGift> _gifts = new Dictionary<int, DouyuGift>();
@@ -26,7 +26,6 @@ namespace Douyu.Client
         static DouyuGift()
         {
             _connection = new SqlConnection(Properties.Settings.Default.ConnectionString);
-            _connection.Open();
             UpdateGiftInfo();
         }
 

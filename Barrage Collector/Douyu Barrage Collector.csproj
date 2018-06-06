@@ -80,7 +80,6 @@
     </Compile>
     <Compile Include="src\Douyu.Client\DouyuGift.cs" />
     <Compile Include="src\Douyu.Client\MessageEventArgs.cs" />
-    <Compile Include="src\Douyu.Client\ScoreAddedEventArgs.cs" />
     <Compile Include="src\Douyu.Messages\MessageException.cs" />
     <Compile Include="src\frmMain.cs">
       <SubType>Form</SubType>
