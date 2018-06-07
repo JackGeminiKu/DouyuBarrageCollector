@@ -59,16 +59,13 @@ namespace Douyu.Messsages
 
         static IDbConnection _connection;
 
-        static GiftMessage()
-        {
-            _connection = new SqlConnection(Properties.Settings.Default.ConnectionString);
-            _connection.Open();
-        }
-
         public static void Save(GiftMessage giftMessage)
         {
+            if (_connection == null)
+                _connection = new SqlConnection(Properties.Settings.Default.ConnectionString);
             var count = _connection.Execute(
-                "insert into GiftMessage(Time, RoomId, UserId, UserName, UserLevel, Weight, GiftId, Hits, BadgeName, BadgeLevel, BadgeRoom) " +
+                "insert into " + 
+                "GiftMessage(Time, RoomId, UserId, UserName, UserLevel, Weight, GiftId, Hits, BadgeName, BadgeLevel, BadgeRoom) " +
                 "values(@Time, @RoomId, @UserId, @UserName, @UserLevel, @Weight, @GiftId, @Hits, @BadgeName, @BadgeLevel, @BadgeRoom)",
                 new {
                     Time = DateTime.Now,

@@ -115,30 +115,28 @@ namespace Douyu.Client
                         continue;
                     }
 
-                    // 获取message items
-                    if (!TryParseMessage(messageText, out messageItems)) {
-                        continue;
-                    }
+                    //// 获取message items
+                    //if (!TryParseMessage(messageText, out messageItems)) {
+                    //    continue;
+                    //}
 
                     // 处理各种消息
-                    switch (messageItems["type"].ToLower()) {
-                        case "chatmsg":
+                    var type = messageText.Substring(0, messageText.IndexOf('/'));
+                    switch (type) {
+                        case "type@=chatmsg":
                             ChatMessage chatMessage = new ChatMessage(messageText);
                             ChatMessage.Save(chatMessage);
                             OnChatMessageRecieved(chatMessage);
                             break;
-                        case "dgb":
+                        case "type@=dgb":
                             GiftMessage giftMessage = new GiftMessage(messageText);
                             GiftMessage.Save(giftMessage);
                             OnGiftMessageRecieved(giftMessage);
                             break;
-                        case "bc_buy_deserve":
+                        case "type@=bc_buy_deserve":
                             ChouqinMessage chouqinMessage = new ChouqinMessage(messageText);
                             ChouqinMessage.Save(chouqinMessage);
                             OnChouqinMessageRecieved(chouqinMessage);
-                            break;
-                        default:
-                            OnServerMessageRecieved(new ServerMessage(messageText));
                             break;
                     }
                 } catch (Exception ex) {
@@ -171,7 +169,7 @@ namespace Douyu.Client
                 MyThread.Wait(1);
             } while (stopwatch.ElapsedMilliseconds < TIMEOUT);
 
-            if (!IsCollectiing)
+            if (IsCollectiing)
                 throw new DouyuException("结束弹幕收集失败: 关闭超时!");
 
             // 发送登出消息
@@ -316,38 +314,40 @@ namespace Douyu.Client
             JoinGroup(RoomId);
         }
 
-        bool TryParseMessage(string messageText, out Dictionary<string, string> messageItems)
-        {
-            LogService.Debug("开始解析服务器消息");
-            messageItems = new Dictionary<string, string>();
-            try {
-                foreach (var value in messageText.Split(new string[] { "/" }, StringSplitOptions.RemoveEmptyEntries)) {
-                    var items = value.Split(new string[] { "@=" }, StringSplitOptions.None);
-                    messageItems.Add(ReplaceKeyWord(items[0]), ReplaceKeyWord(items[1]));
-                }
+        //bool TryParseMessage(string messageText, out Dictionary<string, string> messageItems)
+        //{
+        //    LogService.Debug("开始解析服务器消息");
+        //    messageItems = new Dictionary<string, string>();
+        //    try {
+        //        foreach (var item in messageText.Split(new string[] { "/" }, StringSplitOptions.RemoveEmptyEntries)) {
+        //            int separatorStart = item.IndexOf("@=", StringComparison.Ordinal);
+        //            string key = item.Substring(0, separatorStart);
+        //            var value = item.Substring(separatorStart + 2);
+        //            messageItems.Add(ReplaceKeyWord(key), ReplaceKeyWord(value));
+        //        }
 
-                // 发现有些服务器消息没有type项目, 如收到过: pingreq@=loginping/tick@=1516676439963/
-                if (!messageItems.ContainsKey("type")) {
-                    LogService.Warn("服务器发送的消息没有type项: " + messageText);
-                    return false;
-                }
+        //        // 发现有些服务器消息没有type项目, 如收到过: pingreq@=loginping/tick@=1516676439963/
+        //        if (!messageItems.ContainsKey("type")) {
+        //            LogService.Warn("服务器发送的消息没有type项: " + messageText);
+        //            return false;
+        //        }
 
-                LogService.Debug("成功解析服务器消息!");
-                return true;
-            } catch (Exception ex) {
-                // rid@=122402/sc@=325600/sctn@=0/rid@=-1/type@=qausrespond/
-                // roomset@=/catelv1@=/catelv2@=/type@=brafsn/rid@=122402/agc@=121/ftype@=0/rid@=122402/roomset@=/catelv1@=/catelv2@=/
-                // 上面的不知道是什么消息, 有重复的key, 暂时忽略!
-                if (messageText.Contains("type@=qausrespond") ||
-                    messageText.Contains("type@=brafsn") ||
-                    messageText.Contains("type@=rri")) {
-                    LogService.Warn("解析服务器消息失败!", ex);
-                    return false;
-                }
-                LogService.ErrorFormat("解析服务器消息出错,  服务器消息 = {0}, 出错信息 = {1}", messageText, ex);
-                return false;
-            }
-        }
+        //        LogService.Debug("成功解析服务器消息!");
+        //        return true;
+        //    } catch (Exception ex) {
+        //        // rid@=122402/sc@=325600/sctn@=0/rid@=-1/type@=qausrespond/
+        //        // roomset@=/catelv1@=/catelv2@=/type@=brafsn/rid@=122402/agc@=121/ftype@=0/rid@=122402/roomset@=/catelv1@=/catelv2@=/
+        //        // 上面的不知道是什么消息, 有重复的key, 暂时忽略!
+        //        if (messageText.Contains("type@=qausrespond") ||
+        //            messageText.Contains("type@=brafsn") ||
+        //            messageText.Contains("type@=rri")) {
+        //            LogService.Warn("解析服务器消息失败!", ex);
+        //            return false;
+        //        }
+        //        LogService.ErrorFormat("解析服务器消息出错,  服务器消息 = {0}, 出错信息 = {1}", messageText, ex);
+        //        return false;
+        //    }
+        //}
 
         string ReplaceKeyWord(string value)
         {
@@ -360,7 +360,6 @@ namespace Douyu.Client
         public event EventHandler<MessageEventArgs<GiftMessage>> GiftMessageRecieved;
         public event EventHandler<MessageEventArgs<ChouqinMessage>> ChouqinMessageRecieved;
         public event EventHandler<MessageEventArgs<ClientMessage>> ClientMessageSent;
-        public event EventHandler<MessageEventArgs<ServerMessage>> ServerMessageRecieved;
 
         protected void OnChatMessageRecieved(ChatMessage chatMessage)
         {
@@ -384,12 +383,6 @@ namespace Douyu.Client
         {
             if (ClientMessageSent != null)
                 ClientMessageSent(this, new MessageEventArgs<ClientMessage>(clientMessage));
-        }
-
-        protected void OnServerMessageRecieved(ServerMessage serverMessage)
-        {
-            if (ServerMessageRecieved != null)
-                ServerMessageRecieved(this, new MessageEventArgs<ServerMessage>(serverMessage));
         }
 
         #endregion

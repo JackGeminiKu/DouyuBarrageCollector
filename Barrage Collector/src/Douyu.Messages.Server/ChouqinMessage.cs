@@ -24,7 +24,7 @@ namespace Douyu.Messsages
             Hits = short.Parse(MessageItems["hits"]);
             UserId = int.Parse(MessageItems["sid"]);
             UserLevel = byte.Parse(MessageItems["level"]);
-            BadgeName = (string)MessageItems["bnn"];
+            BadgeName = MessageItems["bnn"];
             BadgeLevel = byte.Parse(MessageItems["bl"]);
             BadgeRoom = int.Parse(MessageItems["brid"]);
         }
@@ -46,16 +46,13 @@ namespace Douyu.Messsages
 
         static IDbConnection _connection;
 
-        static ChouqinMessage()
-        {
-            _connection = new SqlConnection(Properties.Settings.Default.ConnectionString);
-            _connection.Open();
-        }
-
         public static void Save(ChouqinMessage message)
         {
+            if (_connection == null)
+                _connection = new SqlConnection(Properties.Settings.Default.ConnectionString);
             var count = _connection.Execute(
-                "insert into ChouqinMessage([Time], [RoomId], [Level], [Count], [Hits], [UserId], [UserLevel], [BadgeName], [BadgeLevel], [BadgeRoom]) " +
+                "insert into " + 
+                "ChouqinMessage([Time], [RoomId], [Level], [Count], [Hits], [UserId], [UserLevel], [BadgeName], [BadgeLevel], [BadgeRoom]) " +
                 "values(@Time, @RoomId, @Level, @Count, @Hits, @UserId, @UserLevel, @BadgeName, @BadgeLevel, @BadgeRoom)",
                 new {
                     Time = DateTime.Now,

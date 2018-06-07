@@ -44,17 +44,13 @@ namespace Douyu.Messsages
 
         static IDbConnection _connection;
 
-        static ChatMessage()
-        {
-            _connection = new SqlConnection(Properties.Settings.Default.ConnectionString);
-            _connection.Open();
-        }
-
         public static void Save(ChatMessage chatMessage)
         {
+            if (_connection == null)
+                _connection = new SqlConnection(Properties.Settings.Default.ConnectionString);
             var count = _connection.Execute(
-                @"insert into ChatMessage" +
-                "(Time, Text, RoomId, UserId, UserName, UserLevel, BadgeName, BadgeLevel, BadgeRoom) " +
+                @"insert into " +
+                "ChatMessage(Time, Text, RoomId, UserId, UserName, UserLevel, BadgeName, BadgeLevel, BadgeRoom) " +
                 "values(@Time, @Text, @RoomId, @UserId, @UserName, @UserLevel, @BadgeName, @BadgeLevel, @BadgeRoom)",
                 new {
                     Time = DateTime.Now,

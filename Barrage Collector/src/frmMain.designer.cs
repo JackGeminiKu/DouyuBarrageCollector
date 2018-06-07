@@ -38,7 +38,6 @@
             // 
             this.barragePanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.barragePanel.Location = new System.Drawing.Point(0, 0);
-            this.barragePanel.Margin = new System.Windows.Forms.Padding(4);
             this.barragePanel.Name = "barragePanel";
             this.barragePanel.Size = new System.Drawing.Size(756, 462);
             this.barragePanel.TabIndex = 4;

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Douyu.Messsages
 {
-    public class ServerMessage : Message
+    public abstract class ServerMessage : Message
     {
         public ServerMessage(string messageText)
         {
