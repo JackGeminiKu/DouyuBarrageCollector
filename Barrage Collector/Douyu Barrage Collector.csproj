@@ -134,7 +134,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="image\ant.ico" />
-    <Content Include="dll\log4net.dll" />
     <Content Include="Read me.txt" />
   </ItemGroup>
   <ItemGroup>
