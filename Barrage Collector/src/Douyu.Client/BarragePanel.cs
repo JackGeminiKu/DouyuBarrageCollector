@@ -38,7 +38,7 @@ namespace Douyu.Client
             base.OnHandleDestroyed(e);
         }
 
-        #region 事件处理 
+        #region 事件处理
 
         void barrageCollector_ChatMessageRecieved(object sender, MessageEventArgs<ChatMessage> e)
         {
@@ -81,11 +81,15 @@ namespace Douyu.Client
 
         void btnStartCollect_Click(object sender, EventArgs e)
         {
+            if (!ValidateOperation("要开始收集弹幕, 请输入操作密码!"))
+                return;
             StartCollect();
         }
 
         void btnStopCollect_Click(object sender, EventArgs e)
         {
+            if (!ValidateOperation("要停止收集弹幕, 请输入操作密码!"))
+                return;
             StopCollect();
         }
 
@@ -97,6 +101,9 @@ namespace Douyu.Client
 
         void btnSaveRoom_Click(object sender, EventArgs e)
         {
+            if (!ValidateOperation("要保存房间号, 请输入操作密码!"))
+                return;
+
             Properties.Settings.Default.SavedRoom = int.Parse(cboRoomId.Text);
             Properties.Settings.Default.Save();
             MessageBox.Show("房间" + cboRoomId.Text + "已经保存完成!", "保存房间", MessageBoxButtons.OK);
@@ -124,14 +131,10 @@ namespace Douyu.Client
                     MessageBoxButtons.OK, MessageBoxIcon.Warning
                 );
 
-                var password = "";
-                if (PasswordBox.ShowDialog("要强制清除收集状态, 开始收集? 请输入密码!", out password) == DialogResult.Cancel) {
+                if (!ValidateOperation("要强制清除收集状态, 开始收集? 请输入密码!")){
                     return;
                 }
-                if (password != "52664638") {
-                    MessageBox.Show("密码错误", "密码", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
+
                 BarrageCollector.SetCollectingStatus(roomId, false);
             }
 
@@ -170,6 +173,19 @@ namespace Douyu.Client
         void AppendText(TextBox textBox, string format, params object[] args)
         {
             AppendText(textBox, string.Format(format, args));
+        }
+
+        bool ValidateOperation(string message)
+        {
+            var password = "";
+            if (PasswordBox.ShowDialog(message, out password) == DialogResult.Cancel) {
+                return false;
+            }
+            if (password != "52664638") {
+                MessageBox.Show("密码错误", "密码", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+            return true;
         }
     }
 }

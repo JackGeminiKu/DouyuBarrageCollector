@@ -12,10 +12,10 @@ using Jack4net.Log;
 using Jack4net;
 using System.IO;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Data;
 using System.Data.SqlClient;
 using Dapper;
+using System.Threading;
 
 namespace Douyu.Client
 {
