@@ -49,5 +49,5 @@
 等级系统 & 等级系数 ? 青铜, 白银, 黄金 ...
 
 Settings
-Data Source=10.0.0.2;Initial Catalog=Douyu2;User ID=sa;Password=Jack52664638
-Data Source=(local)\SQLServer2008;Initial Catalog=Douyu2;User ID=sa;Password=52664638
+Data Source=10.0.0.2;Initial Catalog=Douyu2;User ID=sa;Password=Jack52664638;MultipleActiveResultSets=true
+Data Source=(local)\SQLServer2008;Initial Catalog=Douyu2;User ID=sa;Password=52664638;MultipleActiveResultSets=true

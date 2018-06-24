@@ -6,7 +6,7 @@
       <Value Profile="(Default)">122402</Value>
     </Setting>
     <Setting Name="ConnectionString" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Data Source=(local)\SQLServer2008;Initial Catalog=Douyu2;User ID=sa;Password=52664638</Value>
+      <Value Profile="(Default)">Data Source=10.0.0.2;Initial Catalog=Douyu2;User ID=sa;Password=Jack52664638;MultipleActiveResultSets=true</Value>
     </Setting>
   </Settings>
 </SettingsFile>
