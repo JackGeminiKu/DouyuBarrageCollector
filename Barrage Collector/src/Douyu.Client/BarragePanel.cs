@@ -34,7 +34,7 @@ namespace Douyu.Client
             _barrageCollector.GiftMessageRecieved -= barrageCollector_GiftMessageRecieved;
             _barrageCollector.ChouqinMessageRecieved -= barrageCollector_ChouqinMessageRecieved;
             _barrageCollector.ClientMessageSent -= barrageCollector_ClientMessageSent;
-            if (_barrageCollector.IsCollectiing) _barrageCollector.StopCollect();
+            if (_barrageCollector.IsCollecting) _barrageCollector.StopCollect();
             base.OnHandleDestroyed(e);
         }
 
@@ -125,13 +125,13 @@ namespace Douyu.Client
         void StartCollect()
         {
             var roomId = cboRoomId.Text;
-            if (BarrageCollector.IsCollectingRoom(roomId)) {
+            if (BarrageCollector.IsCollectingBarrage(roomId)) {
                 MessageBox.Show(
                     string.Format("房间{0}已经处于收集状态了!", roomId), "开始收集",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning
                 );
 
-                if (!ValidateOperation("要强制清除收集状态, 开始收集? 请输入密码!")){
+                if (!ValidateOperation("要强制清除收集状态, 开始收集? 请输入密码!")) {
                     return;
                 }
 
@@ -142,23 +142,21 @@ namespace Douyu.Client
                 MessageBox.Show("正在收集弹幕, 请先停止收集!", "开始收集弹幕", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            btnStartListen.Enabled = false;
-            cboRoomId.Enabled = false;
+            cboRoomId.Enabled = btnStartListen.Enabled = false;
             btnStopListen.Enabled = true;
             bwBarrageCollector.RunWorkerAsync();
         }
 
         void StopCollect()
         {
-            btnStartListen.Enabled = true;
-            cboRoomId.Enabled = true;
+            cboRoomId.Enabled = btnStartListen.Enabled = true;
             btnStopListen.Enabled = false;
             _barrageCollector.StopCollect();
         }
 
         void AppendText(TextBox textBox, string message)
         {
-            const int MAX_LINE_COUNT = 1000;
+            const int MAX_LINE_COUNT = 100;
             const int MAX_CHAR_COUNT = 200;
 
             if (textBox.GetLineCount() > MAX_LINE_COUNT)
