@@ -12,7 +12,7 @@ namespace Douyu.Messages
         { }
 
         public MessageException(string format, params object[] args)
-            : this(string.Format(format, args))
+            : base(string.Format(format, args))
         { }
     }
 }

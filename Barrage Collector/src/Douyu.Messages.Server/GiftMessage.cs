@@ -24,7 +24,7 @@ namespace Douyu.Messsages
             UserName = MessageItems["nn"];
             UserLevel = int.Parse(MessageItems["level"]);
             Weight = int.Parse(MessageItems["dw"]);
-            GiftId = int.Parse(MessageItems["gfid"]);
+            Gift = Gift.GetGift(MessageItems["gfid"]);
             Hits = MessageItems.ContainsKey("hits") ? int.Parse(MessageItems["hits"]) : 0;
             BadgeName = MessageItems["bnn"];
             BadgeLevel = int.Parse(MessageItems["bl"]);
@@ -36,17 +36,7 @@ namespace Douyu.Messsages
         public string UserName { get; private set; }
         public int UserLevel { get; private set; }
         public int Weight { get; private set; }
-        public int GiftId { get; private set; }
-
-        public string GiftName
-        {
-            get
-            {
-                DouyuGift giftInfo = DouyuGift.Get(GiftId);
-                return giftInfo == null ? GiftId.ToString() : giftInfo.Name;
-            }
-        }
-
+        public Gift Gift { get; private set; }
         public int Hits { get; private set; }
         public string BadgeName { get; private set; }
         public int BadgeLevel { get; private set; }
@@ -54,34 +44,36 @@ namespace Douyu.Messsages
 
         public override string ToString()
         {
-            return string.Format("{0}: {1}", UserName, GiftName);
+            return string.Format("{0}: {1}", UserName, Gift == null ? "未知礼物" : Gift.Name);
         }
 
         static IDbConnection _connection;
 
-        public static void Save(GiftMessage giftMessage)
+        public static void Save(GiftMessage message)
         {
             if (_connection == null)
                 _connection = new SqlConnection(Properties.Settings.Default.ConnectionString);
             var count = _connection.Execute(
-                "insert into " + 
-                "GiftMessage(Time, RoomId, UserId, UserName, UserLevel, Weight, GiftId, Hits, BadgeName, BadgeLevel, BadgeRoom) " +
-                "values(@Time, @RoomId, @UserId, @UserName, @UserLevel, @Weight, @GiftId, @Hits, @BadgeName, @BadgeLevel, @BadgeRoom)",
+                "insert into " +
+                "GiftMessage(Time, RoomId, UserId, UserName, UserLevel, Weight, GiftId, GiftName, GiftPrice, GiftExperience, GiftDevote, Hits, BadgeName, BadgeLevel, BadgeRoom) " +
+                "values(@Time, @RoomId, @UserId, @UserName, @UserLevel, @Weight, @GiftId, @GiftName, @GiftPrice, @GiftExperience, @GiftDevote, @Hits, @BadgeName, @BadgeLevel, @BadgeRoom)",
                 new {
-                    Time = DateTime.Now,
-                    RoomId = giftMessage.RoomId,
-                    UserId = giftMessage.UserId,
-                    UserName = giftMessage.UserName,
-                    UserLevel = giftMessage.UserLevel,
-                    Weight = giftMessage.Weight,
-                    GiftId = giftMessage.GiftId,
-                    Hits = giftMessage.Hits,
-                    BadgeName = giftMessage.BadgeName,
-                    BadgeLevel = giftMessage.BadgeLevel,
-                    BadgeRoom = giftMessage.BadgeRoomId
+                    Time = message.Time,
+                    RoomId = message.RoomId,
+                    UserId = message.UserId,
+                    UserName = message.UserName,
+                    UserLevel = message.UserLevel,
+                    Weight = message.Weight,
+                    GiftId = message.Gift.Id,
+                    GiftName = message.Gift.Name,
+                    GiftPrice = message.Gift.Price,
+                    GiftExperience = message.Gift.Experience,
+                    GiftDevote = message.Gift.Devote,
+                    Hits = message.Hits,
+                    BadgeName = message.BadgeName,
+                    BadgeLevel = message.BadgeLevel,
+                    BadgeRoom = message.BadgeRoomId
                 });
-            if (count != 1)
-                LogService.InfoFormat("保存礼物失败: 返回值不为1!");
         }
     }
 }

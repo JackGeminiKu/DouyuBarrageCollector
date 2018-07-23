@@ -30,7 +30,6 @@ namespace Douyu.Client
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             SetFormLocation();
-            ShowAppVersion();
         }
 
         void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
@@ -49,14 +48,23 @@ namespace Douyu.Client
             Location = new Point(Screen.PrimaryScreen.WorkingArea.Width - Size.Width, 0);
         }
 
-        void ShowAppVersion()
-        {
-            this.Text += " v" + Assembly.GetExecutingAssembly().GetName().Version;
-        }
+        const string ROOM_ID = "122402";
+        //const string ROOM_ID = "85894";
+        //const string ROOM_ID = "67373"; // 陈一发
+        //const string ROOM_ID = "71017"; // 冯提莫
+        //const string ROOM_ID = "485503"; // 339
+        //const string ROOM_ID = "468241"; // 魅力生活
+        //const string ROOM_ID = "699689"; // 狐狸
 
         private void frmMain_Shown(object sender, EventArgs e)
         {
-            barragePanel.StartCollect(Properties.Settings.Default.SavedRoom);
+            Text += string.Format(" (房间号: {0})", ROOM_ID);
+            barragePanel.StartCollect(ROOM_ID);
+        }
+
+        private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            barragePanel.StopCollect();
         }
     }
 }

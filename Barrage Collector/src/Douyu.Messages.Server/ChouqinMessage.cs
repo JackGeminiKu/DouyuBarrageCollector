@@ -19,24 +19,24 @@ namespace Douyu.Messsages
                 throw new MessageException("{0}不是酬勤消息!", messageText);
 
             RoomId = int.Parse(MessageItems["rid"]);
-            Level = byte.Parse(MessageItems["lev"]);
-            Count = short.Parse(MessageItems["cnt"]);
-            Hits = short.Parse(MessageItems["hits"]);
+            Level = int.Parse(MessageItems["lev"]);
+            Count = int.Parse(MessageItems["cnt"]);
+            Hits = int.Parse(MessageItems["hits"]);
             UserId = int.Parse(MessageItems["sid"]);
-            UserLevel = byte.Parse(MessageItems["level"]);
+            UserLevel = int.Parse(MessageItems["level"]);
             BadgeName = MessageItems["bnn"];
-            BadgeLevel = byte.Parse(MessageItems["bl"]);
+            BadgeLevel = int.Parse(MessageItems["bl"]);
             BadgeRoom = int.Parse(MessageItems["brid"]);
         }
 
         public int RoomId { get; private set; }
-        public byte Level { get; private set; }
-        public short Count { get; private set; }
-        public short Hits { get; private set; }
+        public int Level { get; private set; }
+        public int Count { get; private set; }
+        public int Hits { get; private set; }
         public int UserId { get; private set; }
-        public byte UserLevel { get; private set; }
+        public int UserLevel { get; private set; }
         public string BadgeName { get; private set; }
-        public byte BadgeLevel { get; private set; }
+        public int BadgeLevel { get; private set; }
         public int BadgeRoom { get; private set; }
 
         public override string ToString()
@@ -51,11 +51,11 @@ namespace Douyu.Messsages
             if (_connection == null)
                 _connection = new SqlConnection(Properties.Settings.Default.ConnectionString);
             var count = _connection.Execute(
-                "insert into " + 
+                "insert into " +
                 "ChouqinMessage([Time], [RoomId], [Level], [Count], [Hits], [UserId], [UserLevel], [BadgeName], [BadgeLevel], [BadgeRoom]) " +
                 "values(@Time, @RoomId, @Level, @Count, @Hits, @UserId, @UserLevel, @BadgeName, @BadgeLevel, @BadgeRoom)",
                 new {
-                    Time = DateTime.Now,
+                    Time = message.Time,
                     RoomId = message.RoomId,
                     Level = message.Level,
                     Count = message.Count,
@@ -66,8 +66,6 @@ namespace Douyu.Messsages
                     BadgeLevel = message.BadgeLevel,
                     BadgeRoom = message.BadgeRoom
                 });
-            if (count != 1)
-                LogService.Info("保存酬勤失败: 返回值不为1!");
         }
     }
 }

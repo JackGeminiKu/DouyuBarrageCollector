@@ -60,6 +60,10 @@
       <HintPath>..\..\Jack4net-2.0\Jack4net\dll\Dapper\Dapper.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Jack4net-2.0\Jack4net\dll\Json.NET\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
@@ -78,7 +82,7 @@
     <Compile Include="src\Douyu.Client\BarragePanel.Designer.cs">
       <DependentUpon>BarragePanel.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Douyu.Client\DouyuGift.cs" />
+    <Compile Include="src\Douyu.Client\Gift.cs" />
     <Compile Include="src\Douyu.Client\MessageEventArgs.cs" />
     <Compile Include="src\Douyu.Messages\MessageException.cs" />
     <Compile Include="src\frmMain.cs">

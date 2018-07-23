@@ -7,10 +7,10 @@ namespace Douyu.Messsages
 {
     public class LoginreqMessage : ClientMessage
     {
-        public LoginreqMessage(string RoomId)
+        public LoginreqMessage(string roomId)
         {
             AddMessageItem("type", "loginreq");      
-            AddMessageItem("roomid", RoomId); 
+            AddMessageItem("roomid", roomId); 
         }
     }
 }

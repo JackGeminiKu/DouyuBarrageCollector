@@ -13,30 +13,30 @@ namespace Douyu.Messsages
             Time = DateTime.Now;
         }
 
-        public DateTime Time { get; protected set; }
+        public DateTime Time { get; private set; }
 
         protected abstract int MessageType { get; }
 
         public string MessageText { get; protected set; }
 
-        public byte[] MessgeBytes { get { return CreateMessageBytes(MessageText); } }
+        public byte[] MessgeBytes { get { return ConvertToMessageBytes(MessageText); } }
 
         public Dictionary<string, string> MessageItems { get; protected set; }
 
-        byte[] CreateMessageBytes(string messageData)
+        byte[] ConvertToMessageBytes(string messageText)
         {
-            if (!messageData.EndsWith("\0"))
-                messageData += "\0";
+            if (!messageText.EndsWith("\0"))
+                messageText += "\0";
 
             var result = new List<byte>();
             try {
-                var lenBytes = (messageData.Length + 8).ToLittleEndian();
+                var lenBytes = (messageText.Length + 8).ToLittleEndian();
                 result.AddRange(lenBytes);
                 result.AddRange(lenBytes);
                 result.AddRange(MessageType.ToLittleEndian().Take(2));
                 result.Add(0);
                 result.Add(0);
-                result.AddRange(Encoding.UTF8.GetBytes(messageData));
+                result.AddRange(Encoding.UTF8.GetBytes(messageText));
             } catch (Exception e) {
                 LogService.Fatal(e.Message, e);
                 throw;

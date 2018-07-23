@@ -39,15 +39,17 @@
             this.barragePanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.barragePanel.Font = new System.Drawing.Font("Microsoft YaHei", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.barragePanel.Location = new System.Drawing.Point(0, 0);
+            this.barragePanel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.barragePanel.Name = "barragePanel";
-            this.barragePanel.Size = new System.Drawing.Size(756, 462);
+            this.barragePanel.RoomId = null;
+            this.barragePanel.Size = new System.Drawing.Size(484, 271);
             this.barragePanel.TabIndex = 4;
             // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(756, 462);
+            this.ClientSize = new System.Drawing.Size(484, 271);
             this.Controls.Add(this.barragePanel);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -55,6 +57,7 @@
             this.Name = "frmMain";
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.Text = "斗鱼弹幕收集器";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
             this.Load += new System.EventHandler(this.frmMain_Load);
             this.Shown += new System.EventHandler(this.frmMain_Shown);
             this.ResumeLayout(false);
