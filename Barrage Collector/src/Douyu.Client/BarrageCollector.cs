@@ -21,7 +21,7 @@ namespace Douyu.Client
 {
     public class BarrageCollector
     {
-        const int KEEP_LIVE_INTERVAL = 45 * 1000;
+        const int KEEP_LIVE_INTERVAL = 30 * 1000;
         bool _stopCollect = false;
         Socket _socket;
         IDbConnection _connection;
@@ -168,9 +168,8 @@ namespace Douyu.Client
 
             try {
                 LogService.Info("连接弹幕服务器");
-                var ipEndPoint = new IPEndPoint(Dns.GetHostAddresses(BARRAGE_SERVER)[0], BARRAGE_PORT);
                 _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                _socket.Connect(ipEndPoint);
+                _socket.Connect("222.187.0.83", BARRAGE_PORT);
                 if (!_socket.Connected) {
                     LogService.Fatal("连接弹幕服务器失败: 连接不上啊!");
                 }
@@ -275,12 +274,17 @@ namespace Douyu.Client
 
         void SendMessage(ClientMessage clientMessage)
         {
-            LogService.Info("发送消息: " + clientMessage.ToString());
-            var messageBytes = clientMessage.MessgeBytes;
-            var count = _socket.Send(messageBytes);
-            if (count != messageBytes.Length)
-                LogService.Error("发送数据不全: " + clientMessage.ToString());
-            OnClientMessageSent(clientMessage);
+            try {
+                LogService.Info("发送消息: " + clientMessage.ToString());
+                var messageBytes = clientMessage.MessgeBytes;
+                var count = _socket.Send(messageBytes);
+                if (count != messageBytes.Length)
+                    LogService.Error("发送数据不全: " + clientMessage.ToString());
+                OnClientMessageSent(clientMessage);
+            } catch (Exception ex) {
+                LogService.Info("send Message Throw Exception", ex);
+                ReConnect();
+            }
         }
 
         void ReConnect()
