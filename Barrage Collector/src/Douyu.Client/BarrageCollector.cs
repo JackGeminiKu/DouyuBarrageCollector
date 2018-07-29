@@ -16,131 +16,136 @@ using System.Data;
 using System.Data.SqlClient;
 using Dapper;
 using System.Threading;
+using System.Web;
+using Newtonsoft.Json;
 
 namespace Douyu.Client
 {
     public class BarrageCollector
     {
-        const int KEEP_LIVE_INTERVAL = 30 * 1000;
         bool _stopCollect = false;
         Socket _socket;
         IDbConnection _connection;
-        System.Threading.Timer _timer;
 
-        public BarrageCollector()
+        public int RoomId { get; set; }
+
+        IDbConnection Connection
         {
-            _connection = new SqlConnection(Properties.Settings.Default.ConnectionString);
-            _timer = new System.Threading.Timer(KeepLive, null, KEEP_LIVE_INTERVAL, KEEP_LIVE_INTERVAL);
+            get
+            {
+                return _connection ?? (_connection = new SqlConnection(Properties.Settings.Default.ConnectionString));
+            }
         }
-
-        void KeepLive(object obj)
-        {
-            LogService.Debug("发送心跳消息");
-            SendMessage(new KeepLiveMessage());
-        }
-
-        public string RoomId { get; set; }
 
         public bool IsCollecting
         {
             get
             {
-                var rows = _connection.Query(
+                var isCollecting = Connection.ExecuteScalar<bool>(
                     "select IsCollecting from RoomStatus where RoomId = @RoomId",
                     new { RoomId = RoomId }
                 );
-                return rows.Count() == 1 && rows.First().IsCollecting == true;
+                return isCollecting;
             }
             private set
             {
-                var roomStatus = _connection.Query(
-                    "select * from RoomStatus where RoomId = @RoomId",
+                var rowCount = Connection.ExecuteScalar<int>(
+                    "select count(*) from RoomStatus where RoomId = @RoomId",
                     new { RoomId = RoomId }
                 );
-
-                if (roomStatus.Count() != 0) {
-                    _connection.Execute(
-                       "update RoomStatus set IsCollecting = @IsCollecting where RoomId = @RoomId",
-                       new { IsCollecting = value, RoomId = RoomId }
-                   );
-                } else {
-                    _connection.Execute(
+                if (rowCount == 0) {
+                    Connection.Execute(
                        @"insert into RoomStatus(RoomId, IsCollecting) values(@RoomId, @IsCollecting)",
                        new { RoomId = RoomId, IsCollecting = value }
+                   );
+                } else {
+                    Connection.Execute(
+                       "update RoomStatus set IsCollecting = @IsCollecting where RoomId = @RoomId",
+                       new { IsCollecting = value, RoomId = RoomId }
                    );
                 }
             }
         }
 
+        void StartKeepLiveTimer()
+        {
+            if (_timer == null) {
+                TimerCallback keepLive = (state) => {
+                    LogService.Debug("发送心跳消息");
+                    SendMessage(new KeepLiveMessage());
+                };
+                _timer = new System.Threading.Timer(keepLive, null, KEEP_LIVE_INTERVAL, KEEP_LIVE_INTERVAL);
+            }
+        }
+
+        System.Threading.Timer _timer;
+        const int KEEP_LIVE_INTERVAL = 30 * 1000;
+
         public void StartCollect()
         {
-            if (IsCollecting && PasswordBox.ShowDialog("房间{0}正在收集中, 如果要取消收集, 请输入密码!", RoomId) != "52664638") {
-                Application.Exit();
+            if (IsCollecting &&
+                PasswordBox.ShowDialog("房间{0}正在收集中!\n如果要取消收集, 请输入密码!", RoomId) != "123456") {
+                Environment.Exit(0);
             }
 
             ConnectBarrageServer();
-            LoginRoom();
-            JoinGroup();
+            StartKeepLiveTimer();
 
             IsCollecting = true;
             _stopCollect = false;
             var messageText = "";
-            var messageItems = new Dictionary<string, string>();
             while (!_stopCollect) {
                 try {
-                    // 尝试获取服务器消息
-                    if (!TryGetMessage(out messageText)) {
+                    if (TryGetMessage(out messageText)) {
+                        ProcessMessage(messageText);
+                    } else {
                         MyThread.Wait(100);
-                        continue;
                     }
-
-                    // 处理各种消息
-                    var type = messageText.Substring(0, messageText.IndexOf('/'));
-                    switch (type) {
-                        case "type@=chatmsg":
-                            ChatMessage chatMessage = new ChatMessage(messageText);
-                            chatMessage.Text += " --- " + _messageBufer.Count();
-                            ChatMessage.Save(chatMessage);
-                            OnChatMessageRecieved(chatMessage);
-                            break;
-                        case "type@=dgb":
-                            GiftMessage giftMessage = new GiftMessage(messageText);
-                            GiftMessage.Save(giftMessage);
-                            OnGiftMessageRecieved(giftMessage);
-                            break;
-                        case "type@=bc_buy_deserve":
-                            ChouqinMessage chouqinMessage = new ChouqinMessage(messageText);
-                            ChouqinMessage.Save(chouqinMessage);
-                            OnChouqinMessageRecieved(chouqinMessage);
-                            break;
-                        default:
-                            Debug.Print(messageText);
-                            break;
+                } catch (ObjectDisposedException objectDisposedEx) {
+                    try {
+                        LogService.Warn("连接被关闭, 准备断线重连!", objectDisposedEx);
+                        ReConnect();
+                    } catch (Exception ex) {
+                        LogService.Fatal("断线重连失败!", ex);
                     }
                 } catch (Exception ex) {
-                    // 尝试断线重连: 有时候服务器会强制关闭连接!!!
-                    if (ex is SocketException || ex is ObjectDisposedException) {
-                        try {
-                            LogService.Warn("网络异常, 准备断线重连: " + ex.Message, ex);
-                            ReConnect();
-                        } catch (Exception connectionEx) {
-                            LogService.Fatal("断线重连失败: " + connectionEx.Message, connectionEx);
-                        }
-                        continue;
-                    }
-
-                    // 记录异常信息
-                    LogService.Error("收集弹幕出现异常: " + ex.Message, ex);
+                    LogService.Error("收集弹幕出现异常!", ex);
                 }
             }
             IsCollecting = false;
         }
 
+        void ProcessMessage(string messageText)
+        {
+            var type = messageText.Substring(0, messageText.IndexOf('/'));
+            switch (type) {
+                case "type@=chatmsg":
+                    ChatMessage chatMessage = new ChatMessage(messageText);
+                    ChatMessage.Save(chatMessage);
+                    OnChatMessageRecieved(chatMessage);
+                    break;
+                case "type@=dgb":
+                    GiftMessage giftMessage = new GiftMessage(messageText);
+                    GiftMessage.Save(giftMessage);
+                    OnGiftMessageRecieved(giftMessage);
+                    break;
+                case "type@=bc_buy_deserve":
+                    ChouqinMessage chouqinMessage = new ChouqinMessage(messageText);
+                    ChouqinMessage.Save(chouqinMessage);
+                    OnChouqinMessageRecieved(chouqinMessage);
+                    break;
+                default:
+                    Debug.Print(messageText);
+                    break;
+            }
+        }
+
         public void StopCollect()
         {
+            const long STOP_COLLECT_TIMEOUT = 3000;
+
             // 结束弹幕收集
             LogService.Info("结束弹幕收集");
-            const long STOP_COLLECT_TIMEOUT = 3000;
             _stopCollect = true;
             var stopwatch = Stopwatch.StartNew();
             do {
@@ -148,71 +153,156 @@ namespace Douyu.Client
                     break;
                 MyThread.Wait(100);
             } while (stopwatch.ElapsedMilliseconds < STOP_COLLECT_TIMEOUT);
-
             if (IsCollecting)
                 throw new DouyuException("结束弹幕收集失败: 关闭超时!");
 
             // 登出
-            try {
-                LogService.Info("登出");
-                SendMessage(new LogoutMessage());
-            } catch (Exception ex) {
-                throw new DouyuException("登出失败: " + ex.Message, ex);
-            }
+            LogService.Info("登出");
+            SendMessage(new LogoutMessage());
         }
 
         void ConnectBarrageServer()
         {
-            const string BARRAGE_SERVER = "openbarrage.douyutv.com"; // 第三方弹幕协议服务器地址
-            const int BARRAGE_PORT = 8601; // 第三方弹幕协议服务器端口 
+            // 获取弹幕服务器消息
+            IPEndPoint[] barrageServers;
+            int messageGroup;
+            GetBarrageServerInfo(out barrageServers, out messageGroup);
 
-            try {
-                LogService.Info("连接弹幕服务器");
-                _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                _socket.Connect("222.187.0.83", BARRAGE_PORT);
-                if (!_socket.Connected) {
-                    LogService.Fatal("连接弹幕服务器失败: 连接不上啊!");
+            // 连接弹幕服务器
+            LogService.Info("连接弹幕服务器");
+            Exception exception = null;
+            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            foreach (var server in barrageServers) {
+                try {
+                    LogService.InfoFormat("连接到弹幕服务器: {0}", server.ToString());
+                    exception = null;
+                    _socket.Connect(server);
+                } catch (Exception ex) {
+                    exception = ex;
                 }
-            } catch (Exception ex) {
-                LogService.Fatal("连接弹幕服务器失败: " + ex.Message, ex);
-                throw new DouyuException("连接弹幕服务器失败: " + ex.Message, ex);
+                if (exception == null)
+                    break;
             }
+            if (exception != null) {
+                throw new DouyuException("连接弹幕服务器失败!", exception);
+            }
+
+            // 登录房间&入组
+            LoginRoom();
+            JoinGroup(messageGroup);
+        }
+
+        void GetBarrageServerInfo(out IPEndPoint[] barrageServers, out int groupId)
+        {
+            try {
+                barrageServers = null;
+                groupId = 0;
+
+                // 连接斗鱼服务器
+                _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                var servers = RoomPage.GetServers(RoomId);
+                Exception exception = null;
+                foreach (var server in servers) {
+                    try {
+                        LogService.InfoFormat("连接到斗鱼服务器: {0}", server.ToString());
+                        exception = null;
+                        _socket.Connect(server);
+                    } catch (Exception ex) {
+                        exception = ex;
+                    }
+                    if (exception == null)
+                        break;
+                }
+                if (exception != null)
+                    throw new DouyuException("连接斗鱼服务器失败!", exception);
+
+                // 返送登录消息, 获取弹幕服务器&弹幕群组
+                SendMessage(new LoginreqMessage(RoomId));
+                barrageServers = GetBarrageServers();
+                groupId = GetMessageGroup();
+            } finally {
+                if (_socket != null && _socket.Connected)
+                    _socket.Disconnect(false);
+            }
+        }
+
+        IPEndPoint[] GetBarrageServers()
+        {
+            // 接收msgiplist消息
+            var messageText = "";
+            var stopwatch = Stopwatch.StartNew();
+            do {
+                if (TryGetMessage(out messageText) && messageText.Contains("type@=msgiplist"))
+                    break;
+                MyThread.Wait(100);
+            } while (stopwatch.ElapsedMilliseconds < 20000);
+            if (!messageText.Contains("type@=msgiplist"))
+                throw new DouyuException("获取msgiplist消息失败!");
+
+            // 解析弹幕服务器
+            var regex = new Regex(@"ip@AA=(?<ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})@ASport@AA=(?<port>\d+)@AS@S");
+            var matches = regex.Matches(messageText);
+            var barrageServers = new IPEndPoint[matches.Count];
+            for (var i = 0; i < matches.Count; ++i) {
+                barrageServers[i] = new IPEndPoint(
+                    IPAddress.Parse(matches[i].Groups["ip"].Value),
+                    int.Parse(matches[i].Groups["port"].Value));
+            }
+            if (barrageServers.Length == 0)
+                throw new DouyuException("没有找到弹幕服务器!");
+            return barrageServers;
+        }
+
+        int GetMessageGroup()
+        {
+            // 接收setmsggroup消息
+            var messageText = "";
+            var stopwatch = Stopwatch.StartNew();
+            do {
+                if (TryGetMessage(out messageText) && messageText.Contains("type@=setmsggroup"))
+                    break;
+                MyThread.Wait(100);
+            } while (stopwatch.ElapsedMilliseconds < 20000);
+            if (!messageText.Contains("type@=setmsggroup"))
+                throw new DouyuException("获取setmsggroup消息失败!");
+
+            // 解析弹幕群组编号
+            var regex = new Regex(@"gid@=(?<gid>\d+)");
+            var match = regex.Match(messageText);
+            if (!match.Success) {
+                throw new DouyuException("没有找到弹幕群组编号");
+            }
+            return int.Parse(match.Groups["gid"].Value);
         }
 
         void LoginRoom()
         {
             LogService.Info("登录房间: " + RoomId);
-            SendMessage(new LoginreqMessage(RoomId));
+            SendMessage(new LoginreqMessage());
 
-            //// 取消检查响应登录功能, 因为: 
-            //// 首次连接服务器, 可以收到登录响应. 但是断开之后再连接, 有可能收不到
-            //// 另外有时候服务器会不响应登录信息
-            //const long LOGIN_TIMEOUT = 3000;
+            // 取消检查响应登录功能, 因为: 
+            // 首次连接服务器, 可以收到登录响应. 但是断开之后再连接, 有可能收不到
+            // 另外有时候服务器会不响应登录信息
+            //const long LOGIN_TIMEOUT = 20000;
+            //var loginres = "";
             //var watch = Stopwatch.StartNew();
             //do {
-            //    if (_socket.Available > 0) break;
+            //    if (_socket.Available > 0 && TryGetMessage(out loginres) && loginres.Contains("type@=loginres")) break;
             //    MyThread.Wait(100);
             //} while (watch.ElapsedMilliseconds < LOGIN_TIMEOUT);
 
-            //var loginres = "";
-            //if (!TryGetMessage(out loginres) || !loginres.Contains("type@=loginres")) {
+            //if (loginres == null || !loginres.Contains("type@=loginres")) {
             //    LogService.Fatal("服务器没有响应登录信息!");
             //    throw new DouyuException("服务器没有响应登录信息!");
             //}
         }
 
-        void JoinGroup()
+        void JoinGroup(int messageGroup)
         {
-            try {
-                LogService.Info("加入房间分组");
-                SendMessage(new JoinGroupMessage(RoomId));
-            } catch (Exception ex) {
-                LogService.Fatal("加入房间分组失败: " + ex.Message, ex);
-                throw new DouyuException("加入房间分组失败: " + ex.Message, ex);
-            }
+            LogService.Info("加入房间分组");
+            SendMessage(new JoinGroupMessage(RoomId, messageGroup));
         }
 
-        const int MAX_TIME_KEEP_LIVE = 40 * 1000;
 
         const int MAX_BUFFER_LENGTH = 65536;    // 设置字节获取buffer的最大值
         List<byte> _messageBufer = new List<byte>();
@@ -274,17 +364,27 @@ namespace Douyu.Client
 
         void SendMessage(ClientMessage clientMessage)
         {
-            try {
-                LogService.Info("发送消息: " + clientMessage.ToString());
-                var messageBytes = clientMessage.MessgeBytes;
-                var count = _socket.Send(messageBytes);
-                if (count != messageBytes.Length)
-                    LogService.Error("发送数据不全: " + clientMessage.ToString());
-                OnClientMessageSent(clientMessage);
-            } catch (Exception ex) {
-                LogService.Info("send Message Throw Exception", ex);
-                ReConnect();
+            Exception exception = null;
+            for (var i = 0; i < 3; ++i) {
+                try {
+                    LogService.Info("发送消息: " + clientMessage.ToString());
+                    exception = null;
+                    _socket.Send(clientMessage.MessgeBytes);
+                    OnClientMessageSent(clientMessage);
+                } catch (SocketException socketEx) {
+                    exception = socketEx;
+                    LogService.Warn("发送消息失败!", socketEx);
+                } catch (ObjectDisposedException objectDisposedEx) {
+                    exception = objectDisposedEx;
+                    ReConnect();
+                }
+
+                if (exception == null)
+                    break;
             }
+
+            if (exception != null)
+                throw new DouyuException("发送消息失败!", exception);
         }
 
         void ReConnect()
@@ -292,8 +392,6 @@ namespace Douyu.Client
             LogService.Info("重新连接!");
             if (_socket != null) _socket.Close();
             ConnectBarrageServer();
-            LoginRoom();
-            JoinGroup();
         }
 
         #region events

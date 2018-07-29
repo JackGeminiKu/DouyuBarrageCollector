@@ -48,13 +48,15 @@ namespace Douyu.Client
             Location = new Point(Screen.PrimaryScreen.WorkingArea.Width - Size.Width, 0);
         }
 
-        const string ROOM_ID = "122402";
-        //const string ROOM_ID = "85894";
-        //const string ROOM_ID = "67373"; // 陈一发
-        //const string ROOM_ID = "71017"; // 冯提莫
-        //const string ROOM_ID = "485503"; // 339
-        //const string ROOM_ID = "468241"; // 魅力生活
-        //const string ROOM_ID = "699689"; // 狐狸
+
+        const int ROOM_ID = 122402;
+        //const int ROOM_ID = 742805;
+        //const int ROOM_ID = 85894;
+        //const int ROOM_ID = 67373; // 陈一发
+        //const int ROOM_ID = 71017; // 冯提莫
+        //const int ROOM_ID = 485503; // 339
+        //const int ROOM_ID = 468241; // 魅力生活
+        //const int ROOM_ID = 699689; // 狐狸
 
         private void frmMain_Shown(object sender, EventArgs e)
         {

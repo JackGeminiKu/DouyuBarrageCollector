@@ -47,9 +47,9 @@ namespace Douyu.Client
         //    base.OnHandleDestroyed(e);
         //}
 
-        public string RoomId { get; set; }
+        public int RoomId { get; set; }
 
-        public void StartCollect(string roomId)
+        public void StartCollect(int roomId)
         {
             RoomId = roomId;
             StartCollect();
