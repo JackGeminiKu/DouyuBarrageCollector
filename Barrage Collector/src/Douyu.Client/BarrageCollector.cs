@@ -371,11 +371,10 @@ namespace Douyu.Client
                     exception = null;
                     _socket.Send(clientMessage.MessgeBytes);
                     OnClientMessageSent(clientMessage);
-                } catch (SocketException socketEx) {
-                    exception = socketEx;
-                    LogService.Warn("发送消息失败!", socketEx);
-                } catch (ObjectDisposedException objectDisposedEx) {
-                    exception = objectDisposedEx;
+                } catch (Exception ex) {
+                    LogService.Warn("发送消息失败!", ex);
+                    exception = ex;
+                    LogService.Warn("开始重新连接弹幕服务器!", ex);
                     ReConnect();
                 }
 
