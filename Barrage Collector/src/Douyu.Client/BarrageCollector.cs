@@ -391,7 +391,7 @@ namespace Douyu.Client
                 MyThread.Wait(3000);
             }
 
-            if (sendOk)
+            if (!sendOk)
                 throw new DouyuException("发送消息失败!");
         }
 
