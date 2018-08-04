@@ -105,7 +105,6 @@ namespace Douyu.Client
                     LogService.Warn("获取&处理消息异常!", ex);
                     if (ex is SocketException || ex is ObjectDisposedException) {
                         try {
-                            LogService.Warn("开始断线重连!");
                             ReConnect();
                         } catch (Exception ex2) {
                             LogService.Fatal("断线重连失败!", ex2);
@@ -352,12 +351,12 @@ namespace Douyu.Client
                 _messageBufer.CopyTo(0, messageBytes, 0, msgTotalLen);
                 _messageBufer.RemoveRange(0, msgTotalLen);
                 //Debug.Print("获得消息字节: " + messageBytes.ToHexString(" "));
-                LogService.Debug("获得消息字节: " + messageBytes.ToHexString(" "));
+                LogService.Debug("Raw data: " + messageBytes.ToHexString(" "));
 
                 // 转换成字串消息
                 messageText = UTF8Encoding.UTF8.GetString(messageBytes, 12, msgTotalLen - 12).Trim('\0');
                 //Debug.Print("获得消息字串: " + messageText);
-                LogService.Info("获得消息字串: " + messageText);
+                LogService.Info("获得消息字串: " + messageText + "\n");
                 return true;
             } catch (Exception ex) {
                 LogService.Error("尝试获取消息失败!", ex);
@@ -378,7 +377,6 @@ namespace Douyu.Client
                     LogService.Error("发送消息出现异常!", ex);
                     if (ex is SocketException || ex is ObjectDisposedException) {
                         try {
-                            LogService.Warn("开始重新连接弹幕服务器!");
                             ReConnect();
                         } catch (Exception ex2) {
                             LogService.Error("重新连接弹幕服务器失败!", ex2);
@@ -397,7 +395,7 @@ namespace Douyu.Client
 
         void ReConnect()
         {
-            LogService.Info("重新连接!");
+            LogService.Warn("开始重新连接!");
             if (_socket != null) _socket.Close();
             ConnectBarrageServer();
         }
