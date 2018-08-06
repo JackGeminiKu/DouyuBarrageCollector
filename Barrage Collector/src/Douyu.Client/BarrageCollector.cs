@@ -67,18 +67,16 @@ namespace Douyu.Client
             }
         }
 
-        void StartKeepLiveTimer()
+        void TryKeepLive()
         {
-            if (_timer == null) {
-                TimerCallback keepLive = (state) => {
-                    LogService.Debug("发送心跳消息");
-                    SendMessage(new KeepLiveMessage());
-                };
-                _timer = new System.Threading.Timer(keepLive, null, KEEP_LIVE_INTERVAL, KEEP_LIVE_INTERVAL);
+            if (_watch == null || _watch.ElapsedMilliseconds > KEEP_LIVE_INTERVAL) {
+                LogService.Debug("发送心跳消息");
+                SendMessage(new KeepLiveMessage());
+                _watch = Stopwatch.StartNew();
             }
         }
 
-        System.Threading.Timer _timer;
+        Stopwatch _watch;
         const int KEEP_LIVE_INTERVAL = 30 * 1000;
 
         public void StartCollect()
@@ -89,13 +87,14 @@ namespace Douyu.Client
             }
 
             ConnectBarrageServer();
-            StartKeepLiveTimer();
 
             IsCollecting = true;
             _stopCollect = false;
             var messageText = "";
             while (!_stopCollect) {
                 try {
+                    TryKeepLive();
+
                     if (TryGetMessage(out messageText)) {
                         ProcessMessage(messageText);
                     } else {
@@ -105,7 +104,9 @@ namespace Douyu.Client
                     LogService.Warn("获取&处理消息异常!", ex);
                     if (ex is SocketException || ex is ObjectDisposedException) {
                         try {
-                            ReConnect();
+                            LogService.Warn("开始重新连接!");
+                            if (_socket != null) _socket.Close();
+                            ConnectBarrageServer();
                         } catch (Exception ex2) {
                             LogService.Fatal("断线重连失败!", ex2);
                             LogService.Info("等待3秒");
@@ -135,9 +136,6 @@ namespace Douyu.Client
                     ChouqinMessage chouqinMessage = new ChouqinMessage(messageText);
                     ChouqinMessage.Save(chouqinMessage);
                     OnChouqinMessageRecieved(chouqinMessage);
-                    break;
-                default:
-                    Debug.Print(messageText);
                     break;
             }
         }
@@ -280,7 +278,7 @@ namespace Douyu.Client
         void LoginRoom()
         {
             LogService.Info("登录房间: " + RoomId);
-            SendMessage(new LoginreqMessage());
+            SendMessage(new LoginreqMessage(RoomId));
 
             // 取消检查响应登录功能, 因为: 
             // 首次连接服务器, 可以收到登录响应. 但是断开之后再连接, 有可能收不到
@@ -366,38 +364,9 @@ namespace Douyu.Client
 
         void SendMessage(ClientMessage clientMessage)
         {
-            var sendOk = false;
-            for (var i = 0; i < 3; ++i) {
-                try {
-                    LogService.Info("发送消息: " + clientMessage.ToString());
-                    _socket.Send(clientMessage.MessgeBytes);
-                    sendOk = true;
-                    OnClientMessageSent(clientMessage);
-                } catch (Exception ex) {
-                    LogService.Error("发送消息出现异常!", ex);
-                    if (ex is SocketException || ex is ObjectDisposedException) {
-                        try {
-                            ReConnect();
-                        } catch (Exception ex2) {
-                            LogService.Error("重新连接弹幕服务器失败!", ex2);
-                        }
-                    }
-                }
-
-                if (sendOk)
-                    break;
-                MyThread.Wait(3000);
-            }
-
-            if (!sendOk)
-                throw new DouyuException("发送消息失败!");
-        }
-
-        void ReConnect()
-        {
-            LogService.Warn("开始重新连接!");
-            if (_socket != null) _socket.Close();
-            ConnectBarrageServer();
+            LogService.Info("发送消息: " + clientMessage.ToString());
+            _socket.Send(clientMessage.MessgeBytes);
+            OnClientMessageSent(clientMessage);
         }
 
         #region events

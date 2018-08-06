@@ -8,12 +8,6 @@ namespace Douyu.Messsages
 {
     public class LoginreqMessage : ClientMessage
     {
-        public LoginreqMessage()
-        {
-            AddMessageItem("type", "loginreq");
-            AddMessageItem("roomid", "742805");
-        }
-
         public LoginreqMessage(int roomId)
         {
             AddMessageItem("type", "loginreq");
@@ -24,12 +18,12 @@ namespace Douyu.Messsages
             var guid = Guid.NewGuid().ToString().Replace("-", "").ToUpper();
             //guid = "D4F18B38EBD24535BD7E38D8642543A1";
             AddMessageItem("devid", guid);
-            var timestamp = ((long)((DateTime.UtcNow - new DateTime(1970, 1, 1,0,0,0,0)).TotalSeconds)).ToString();
+            var timestamp = ((long)((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalSeconds)).ToString();
             //timestamp = "1532612830";
             AddMessageItem("rt", timestamp);
             AddMessageItem("vk", MD5Encrypt(timestamp + "7oE9nPEG9xXV69phU31FYCLUagKeYtsF" + guid, 32));
             AddMessageItem("ver", "20150929");
-        }   
+        }
 
         string MD5Encrypt(string password, int bit)
         {
