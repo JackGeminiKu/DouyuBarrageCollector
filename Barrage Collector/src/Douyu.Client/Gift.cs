@@ -5,6 +5,8 @@ using System.Text;
 using System.Net;
 using System.IO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.Data.SqlClient;
 
 namespace Douyu.Client
 {
@@ -44,97 +46,47 @@ namespace Douyu.Client
         static Dictionary<string, Gift> GetGifts()
         {
             var gifts = new Dictionary<string, Gift>();
-            gifts = GetPropGifts();
 
-            var gifts2 = new Dictionary<string, Gift>();
-            gifts2 = Get635Gifts();
-
-            var gifts3 = new Dictionary<string, Gift>();
-            gifts3 = Get54Gifts();
-
-            foreach (var item in gifts2.Keys) {
-                if (!gifts.ContainsKey(item)) {
-                    gifts.Add(item, gifts2[item]);
+            var urls = AppSettings.GiftUrls;
+            foreach (var url in urls.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)) {
+                foreach (var item in GetGifts(url)) {
+                    if (!gifts.ContainsKey(item.Key)) {
+                        gifts.Add(item.Key, item.Value);
+                    }
                 }
             }
+            return gifts;
+        }
 
-            foreach (var item in gifts3.Keys) {
-                if (!gifts.ContainsKey(item)) {
-                    gifts.Add(item, gifts3[item]);
+        static Dictionary<string, Gift> GetGifts(string url)
+        {
+            var json = GetGiftJson(url);
+            var propGiftConfig = JsonConvert.DeserializeObject<dynamic>(json);
+            if (propGiftConfig.error != 0)
+                return null;
+
+            var gifts = new Dictionary<string, Gift>();
+            foreach (var item in propGiftConfig.data) {
+                Gift gift;
+                if (item.GetType() == typeof(JProperty)) {
+                    gift = new Gift(
+                        item.Name,
+                        (string)item.Value["name"],
+                        (int)item.Value["pc"],
+                        (int)item.Value["exp"],
+                        (double)item.Value["devote"]
+                    );
+                    gifts.Add(item.Name, gift);
+                } else {
+                    gift = new Gift(
+                        (string)item["id"],
+                        (string)item["name"],
+                        (int)item["pc"],
+                        (int)item["exp"],
+                        (double)item["devote"]
+                    );
+                    gifts.Add(item["id"].ToString(), gift);
                 }
-            }
-
-            foreach (var item in gifts.Values) {
-                Console.WriteLine("{0}, {1}, {2}, {3}, {4}", item.Id, item.Name, item.Price, item.Experience, item.Devote);
-            }
-
-            return gifts;
-        }
-
-        static Dictionary<string, Gift> GetPropGifts()
-        {
-            var url = "https://webconf.douyucdn.cn/resource/common/prop_gift_list/prop_gift_config.json";
-            var json = GetGiftJson(url);
-            var propGiftConfig = JsonConvert.DeserializeObject<dynamic>(json);
-            if (propGiftConfig.error != 0)
-                return null;
-
-            var gifts = new Dictionary<string, Gift>();
-            foreach (var item in propGiftConfig.data) {
-                var gift = new Gift(
-                    item.Name,
-                    item.Value["name"].Value.ToString(),
-                    (int)item.Value["pc"],
-                    (int)item.Value["exp"],
-                    (double)item.Value["devote"]
-                );
-                gifts.Add(item.Name, gift);
-            }
-
-            return gifts;
-        }
-
-        static Dictionary<string, Gift> Get635Gifts()
-        {
-            var url = "https://webconf.douyucdn.cn/resource/common/gift/gift_template/625.json";
-            var json = GetGiftJson(url);
-            var propGiftConfig = JsonConvert.DeserializeObject<dynamic>(json);
-            if (propGiftConfig.error != 0)
-                return null;
-
-            var gifts = new Dictionary<string, Gift>();
-            foreach (var item in propGiftConfig.data) {
-                var gift = new Gift(
-                    item["id"].ToString(),
-                    item["name"].ToString(),
-                    (int)item["pc"],
-                    (int)item["exp"],
-                    (double)item["devote"]
-                );
-                gifts.Add(item["id"].ToString(), gift);
-            }
-
-            return gifts;
-        }
-
-        static Dictionary<string, Gift> Get54Gifts()
-        {
-            var url = "https://webconf.douyucdn.cn/resource/common/gift/gift_template/54.json";
-            var json = GetGiftJson(url);
-            var propGiftConfig = JsonConvert.DeserializeObject<dynamic>(json);
-            if (propGiftConfig.error != 0)
-                return null;
-
-            var gifts = new Dictionary<string, Gift>();
-            foreach (var item in propGiftConfig.data) {
-                var gift = new Gift(
-                    item["id"].ToString(),
-                    item["name"].ToString(),
-                    (int)item["pc"],
-                    (int)item["exp"],
-                    (double)item["devote"]
-                );
-                gifts.Add(item["id"].ToString(), gift);
             }
 
             return gifts;

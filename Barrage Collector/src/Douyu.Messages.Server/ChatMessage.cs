@@ -7,6 +7,7 @@ using System.Data;
 using System.Data.SqlClient;
 using Dapper;
 using Jack4net.Log;
+using System.Diagnostics;
 
 namespace Douyu.Messsages
 {
@@ -17,8 +18,7 @@ namespace Douyu.Messsages
         {
             if (MessageItems["type"] != "chatmsg")
                 throw new MessageException("{0}不是弹幕消息!", messageText);
-
-            SendingTime = GetTime(long.Parse(MessageItems["cst"]));
+            SendingTime = MessageItems.ContainsKey("cst") ? GetTime(long.Parse(MessageItems["cst"])) : DateTime.Now;
             Text = MessageItems["txt"];
             RoomId = int.Parse(MessageItems["rid"]);
             UserId = int.Parse(MessageItems["uid"]);
@@ -38,7 +38,7 @@ namespace Douyu.Messsages
         }
 
         public DateTime SendingTime { get; private set; }
-        public string Text { get;  set; }
+        public string Text { get; set; }
         public int RoomId { get; private set; }
         public int UserId { get; private set; }
         public string UserName { get; private set; }

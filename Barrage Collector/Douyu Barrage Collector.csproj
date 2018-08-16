@@ -78,15 +78,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="src\Douyu.Client\AppSettings.cs" />
     <Compile Include="src\Douyu.Client\BarragePanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="src\Douyu.Client\BarragePanel.Designer.cs">
       <DependentUpon>BarragePanel.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Douyu.Client\DouyuService.cs" />
+    <Compile Include="src\Douyu.Client\DouyuSocket.cs" />
     <Compile Include="src\Douyu.Client\Gift.cs" />
     <Compile Include="src\Douyu.Client\MessageEventArgs.cs" />
-    <Compile Include="src\Douyu.Client\RoomPage.cs" />
     <Compile Include="src\Douyu.Messages\MessageException.cs" />
     <Compile Include="src\frmMain.cs">
       <SubType>Form</SubType>

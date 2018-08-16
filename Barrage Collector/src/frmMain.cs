@@ -49,19 +49,12 @@ namespace Douyu.Client
         }
 
 
-        const int ROOM_ID = 122402;
-        //const int ROOM_ID = 742805;
-        //const int ROOM_ID = 85894;
-        //const int ROOM_ID = 67373; // 陈一发
-        //const int ROOM_ID = 71017; // 冯提莫
-        //const int ROOM_ID = 485503; // 339
-        //const int ROOM_ID = 468241; // 魅力生活
-        //const int ROOM_ID = 699689; // 狐狸
+
 
         private void frmMain_Shown(object sender, EventArgs e)
         {
-            Text += string.Format(" (房间号: {0})", ROOM_ID);
-            barragePanel.StartCollect(ROOM_ID);
+            Text += string.Format(" (房间号: {0})", AppSettings.RoomId);
+            barragePanel.StartCollect(AppSettings.RoomId);
         }
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)

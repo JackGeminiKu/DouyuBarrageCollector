@@ -38,7 +38,7 @@ namespace Douyu.Messsages
                 result.Add(0);
                 result.AddRange(Encoding.UTF8.GetBytes(messageText));
             } catch (Exception e) {
-                LogService.Fatal(e.Message, e);
+                LogService.Error(e.Message, e);
                 throw;
             }
 
