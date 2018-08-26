@@ -23,41 +23,43 @@ namespace Douyu.Client
             barrageServers = null;
             groupId = 0;
 
-            try {
-                // 获取斗鱼服务器
-                LogService.Info("获取斗鱼服务器");
-                var servers = GetServers(roomId);
+            // 获取斗鱼服务器
+            LogService.Info("获取斗鱼服务器");
+            var servers = GetServers(roomId);
 
-                // 连接斗鱼服务器
-                Exception exception = null;
-                foreach (var server in servers) {
-                    try {
-                        LogService.InfoFormat("连接到斗鱼服务器: {0}", server.ToString());
-                        exception = null;
-                        _douyuSocket = new DouyuSocket();
-                        _douyuSocket.Connect(server);
-                    } catch (Exception ex) {
-                        exception = ex;
-                    }
-                    if (exception == null)
-                        break;
+            // 连接斗鱼服务器
+            Exception exception = null;
+            foreach (var server in servers) {
+                try {
+                    LogService.InfoFormat("连接到斗鱼服务器: {0}", server.ToString());
+                    exception = null;
+                    _douyuSocket = new DouyuSocket();
+                    _douyuSocket.Connect(server);
+                } catch (Exception ex) {
+                    exception = ex;
                 }
-                if (exception != null)
-                    throw new DouyuException("连接斗鱼服务器失败!", exception);
-
-                LogService.Info("发送登录消息");
-                _douyuSocket.SendMessage(new LoginreqMessage(roomId));
-
-                LogService.Info("获取弹幕服务器");
-                barrageServers = GetBarrageServers();
-
-                LogService.Info("获取弹幕分组");
-                groupId = GetMessageGroup();
-            } finally {
-                if (_douyuSocket != null && _douyuSocket.Connected)
-                    _douyuSocket.Disconnect();
+                if (exception == null)
+                    break;
             }
+            if (exception != null)
+                throw new DouyuException("连接斗鱼服务器失败!", exception);
+
+            LogService.Info("发送登录消息");
+            _douyuSocket.SendMessage(new LoginreqMessage(roomId));
+
+            LogService.Info("获取弹幕服务器");
+            barrageServers = GetBarrageServers();
+
+            LogService.Info("获取弹幕分组");
+            groupId = GetMessageGroup();
+
+            _keepliveTimer = new Timer(
+                (o) => {
+                    _douyuSocket.SendMessage(new KeepliveMessage());
+                }, null, 30000, 30000);
         }
+
+        static Timer _keepliveTimer;
 
         static IPEndPoint[] GetServers(int roomId)
         {

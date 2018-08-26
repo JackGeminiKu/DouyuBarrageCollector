@@ -161,7 +161,7 @@ namespace Douyu.Client
         {
             if (_watch == null || _watch.ElapsedMilliseconds > KEEP_LIVE_INTERVAL) {
                 LogService.Info("发送心跳消息");
-                _douyuSocket.SendMessage(new KeepLiveMessage());
+                _douyuSocket.SendMessage(new MrklMessage());
                 if (_watch == null)
                     _watch = Stopwatch.StartNew();
                 else

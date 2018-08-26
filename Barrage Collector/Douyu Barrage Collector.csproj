@@ -89,6 +89,7 @@
     <Compile Include="src\Douyu.Client\DouyuSocket.cs" />
     <Compile Include="src\Douyu.Client\Gift.cs" />
     <Compile Include="src\Douyu.Client\MessageEventArgs.cs" />
+    <Compile Include="src\Douyu.Messages.Client\KeepliveMessage.cs" />
     <Compile Include="src\Douyu.Messages\MessageException.cs" />
     <Compile Include="src\frmMain.cs">
       <SubType>Form</SubType>
@@ -102,7 +103,7 @@
     <Compile Include="src\Douyu\DouyuException.cs" />
     <Compile Include="src\Douyu.Messages.Client\ClientMessage.cs" />
     <Compile Include="src\Douyu.Messages.Client\JoinGroupMessage.cs" />
-    <Compile Include="src\Douyu.Messages.Client\KeepLiveMessage.cs" />
+    <Compile Include="src\Douyu.Messages.Client\MrklMessage.cs" />
     <Compile Include="src\Douyu.Messages.Client\LoginreqMessage.cs" />
     <Compile Include="src\Douyu.Messages.Client\LogoutMessage.cs" />
     <Compile Include="src\Douyu.Messages\Message.cs" />
