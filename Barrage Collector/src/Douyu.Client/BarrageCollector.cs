@@ -80,6 +80,7 @@ namespace Douyu.Client
                     } else {
                         MyThread.Wait(100);
                     }
+                    //throw new SocketException();
                 } catch (Exception ex) {
                     LogService.Error("获取&处理消息异常!", ex);
                     if (ex is SocketException || ex is ObjectDisposedException) {
@@ -126,7 +127,7 @@ namespace Douyu.Client
 
             // 登录房间&入组
             LoginRoom();
-            JoinGroup(messageGroup);
+            JoinGroup(messageGroup); 
         }
 
         void LoginRoom()
@@ -154,7 +155,7 @@ namespace Douyu.Client
         void JoinGroup(int messageGroup)
         {
             LogService.Info("发送加入房间分组消息");
-            _douyuSocket.SendMessage(new JoinGroupMessage(RoomId, messageGroup));
+            _douyuSocket.SendMessage(new JoinGroupMessage(RoomId, messageGroup)); 
         }
 
         void TryKeepLive()
@@ -170,7 +171,7 @@ namespace Douyu.Client
         }
 
         Stopwatch _watch;
-        const int KEEP_LIVE_INTERVAL = 30 * 1000;
+        const int KEEP_LIVE_INTERVAL = 45 * 1000;
 
         void ProcessMessage(string messageText)
         {

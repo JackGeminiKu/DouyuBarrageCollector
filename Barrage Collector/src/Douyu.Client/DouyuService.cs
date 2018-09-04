@@ -11,6 +11,7 @@ using Douyu.Messsages;
 using System.Web;
 using Newtonsoft.Json;
 using System.IO;
+using System.Timers;
 
 namespace Douyu.Client
 {
@@ -18,10 +19,18 @@ namespace Douyu.Client
     {
         static DouyuSocket _douyuSocket;
 
+        public static int RoomId { get; private set; }
+
         public static void GetBarrageServerInfo(int roomId, out IPEndPoint[] barrageServers, out int groupId)
         {
             barrageServers = null;
             groupId = 0;
+
+            RoomId = roomId;
+
+            // 如果计时器已经启动, 先停掉它, 确保其不能发送数据
+            if (_keepliveTimer != null)
+                _keepliveTimer.Stop();
 
             // 获取斗鱼服务器
             LogService.Info("获取斗鱼服务器");
@@ -50,16 +59,38 @@ namespace Douyu.Client
             LogService.Info("获取弹幕服务器");
             barrageServers = GetBarrageServers();
 
-            LogService.Info("获取弹幕分组");
-            groupId = GetMessageGroup();
+            groupId = -9999;    // 海量弹幕
+            //LogService.Info("获取弹幕分组");
+            //groupId = GetMessageGroup();
 
-            _keepliveTimer = new Timer(
-                (o) => {
-                    _douyuSocket.SendMessage(new KeepliveMessage());
-                }, null, 30000, 30000);
+            if (_keepliveTimer == null) {
+                _keepliveTimer = new System.Timers.Timer(45 * 1000);
+                _keepliveTimer.Elapsed += KeepliveTimer_Elapsed;
+                _keepliveTimer.Start();
+            }
         }
 
-        static Timer _keepliveTimer;
+        static void KeepliveTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            try {
+                _douyuSocket.SendMessage(new KeepliveMessage());
+                // 服务器会发送数据过来, 收了吧
+                var messageText = "";
+                _douyuSocket.TryGetMessage(out messageText);
+            } catch (Exception ex) {
+                LogService.Error("发送心跳信息失败!", ex);
+
+                _keepliveTimer.Stop();
+                _keepliveTimer.Elapsed -= KeepliveTimer_Elapsed;
+                _keepliveTimer = null;
+
+                IPEndPoint[] barrageServers;
+                int groupId;
+                GetBarrageServerInfo(RoomId, out barrageServers, out groupId);
+            }
+        }
+
+        static System.Timers.Timer _keepliveTimer;
 
         static IPEndPoint[] GetServers(int roomId)
         {

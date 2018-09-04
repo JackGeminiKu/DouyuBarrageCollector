@@ -12,7 +12,7 @@ namespace Douyu.Client
     {
         static IDbConnection _connection = new SqlConnection(Properties.Settings.Default.ConnectionString);
 
-        public static int RoomId { get { return 122402; } }
+        public static int RoomId { get { return 85894; } }
 
         public static string GiftUrls
         {
