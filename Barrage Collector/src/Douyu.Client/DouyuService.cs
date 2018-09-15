@@ -6,12 +6,13 @@ using System.Net;
 using System.Diagnostics;
 using System.Threading;
 using System.Text.RegularExpressions;
-using Jack4net.Log;
+using My.Log;
 using Douyu.Messsages;
 using System.Web;
 using Newtonsoft.Json;
 using System.IO;
 using System.Timers;
+using My.Windows.Forms;
 
 namespace Douyu.Client
 {
@@ -143,7 +144,7 @@ namespace Douyu.Client
             do {
                 if (_douyuSocket.TryGetMessage(out messageText) && messageText.Contains("type@=msgiplist"))
                     break;
-                MyThread.Wait(100);
+                MyApplication.Delay(100);
             } while (stopwatch.ElapsedMilliseconds < 20000);
             if (!messageText.Contains("type@=msgiplist"))
                 throw new DouyuException("获取msgiplist消息失败!");
@@ -170,7 +171,7 @@ namespace Douyu.Client
             do {
                 if (_douyuSocket.TryGetMessage(out messageText) && messageText.Contains("type@=setmsggroup"))
                     break;
-                MyThread.Wait(100);
+                MyApplication.Delay(100);
             } while (stopwatch.ElapsedMilliseconds < 20000);
             if (!messageText.Contains("type@=setmsggroup"))
                 throw new DouyuException("获取setmsggroup消息失败!");

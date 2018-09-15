@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Douyu.Messages;
 using Dapper;
-using Jack4net.Log;
+using My.Log;
 using System.Data;
 using System.Data.SqlClient;
 

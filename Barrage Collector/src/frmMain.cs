@@ -10,10 +10,11 @@ using System.Threading;
 using System.IO;
 using System.Reflection;
 using Douyu.Messsages;
-using Jack4net;
-using Jack4net.Log;
+using My;
+using My.Log;
 using System.Configuration;
 using System.Diagnostics;
+using My.Windows.Forms;
 
 namespace Douyu.Client
 {
@@ -48,12 +49,10 @@ namespace Douyu.Client
             Location = new Point(Screen.PrimaryScreen.WorkingArea.Width - Size.Width, 0);
         }
 
-
-
-
         private void frmMain_Shown(object sender, EventArgs e)
         {
             Text += string.Format(" (房间号: {0})", AppSettings.RoomId);
+            Text += " v" + MyApplication.Version;
             barragePanel.StartCollect(AppSettings.RoomId);
         }
 

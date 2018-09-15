@@ -169,9 +169,9 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Jack4net-2.0\Jack4net\Jack4net.csproj">
-      <Project>{22933E0A-48BF-4095-8815-E1E2BAB35B9C}</Project>
-      <Name>Jack4net</Name>
+    <ProjectReference Include="..\..\MyFramework\MyFramework\MyFramework.csproj">
+      <Project>{E7BF7E74-C615-4D6B-86B1-8B53E3981DA1}</Project>
+      <Name>MyFramework</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

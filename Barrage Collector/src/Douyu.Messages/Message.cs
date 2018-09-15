@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Jack4net.Log;
+using My.Log;
 
 namespace Douyu.Messsages
 {

@@ -8,8 +8,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Douyu.Messsages;
-using Jack4net.Log;
-using Jack4net;
+using My.Log;
+using My;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Data;
@@ -18,6 +18,7 @@ using Dapper;
 using System.Threading;
 using System.Web;
 using Newtonsoft.Json;
+using My.Windows.Forms;
 
 namespace Douyu.Client
 {
@@ -61,9 +62,16 @@ namespace Douyu.Client
 
         public void StartCollect()
         {
-            if (IsCollecting &&
-                PasswordBox.ShowDialog("房间{0}正在收集中!\n如果要取消收集, 请输入密码!", RoomId) != "123456") {
-                Environment.Exit(0);
+            if (IsCollecting) {
+                var passwordBox = new PasswordBox();
+                if (passwordBox.Show("房间{0}正在收集中!\n如果要取消收集, 请输入密码!", RoomId) == DialogResult.Cancel) {
+                    Environment.Exit(0);
+                }
+
+                if (passwordBox.Password != "123456") {
+                    MessageBox.Show("密码错误", "开始收集");
+                    Environment.Exit(0);
+                }
             }
 
             ConnectBarrageServer();
@@ -78,7 +86,7 @@ namespace Douyu.Client
                     if (_douyuSocket.TryGetMessage(out messageText)) {
                         ProcessMessage(messageText);
                     } else {
-                        MyThread.Wait(100);
+                        MyApplication.Delay(100);
                     }
                     //throw new SocketException();
                 } catch (Exception ex) {
@@ -91,7 +99,7 @@ namespace Douyu.Client
                         } catch (Exception reconnectEx) {
                             LogService.Error("断线重连失败!", reconnectEx);
                             LogService.Error("等待3秒");
-                            MyThread.Wait(3000);
+                            MyApplication.Delay(3000);
                         }
                     }
                 }
@@ -127,7 +135,7 @@ namespace Douyu.Client
 
             // 登录房间&入组
             LoginRoom();
-            JoinGroup(messageGroup); 
+            JoinGroup(messageGroup);
         }
 
         void LoginRoom()
@@ -143,7 +151,7 @@ namespace Douyu.Client
             //var watch = Stopwatch.StartNew();
             //do {
             //    if (_socket.Available > 0 && TryGetMessage(out loginres) && loginres.Contains("type@=loginres")) break;
-            //    MyThread.Wait(100);
+            //    MyApplication.Delay(100);
             //} while (watch.ElapsedMilliseconds < LOGIN_TIMEOUT);
 
             //if (loginres == null || !loginres.Contains("type@=loginres")) {
@@ -155,7 +163,7 @@ namespace Douyu.Client
         void JoinGroup(int messageGroup)
         {
             LogService.Info("发送加入房间分组消息");
-            _douyuSocket.SendMessage(new JoinGroupMessage(RoomId, messageGroup)); 
+            _douyuSocket.SendMessage(new JoinGroupMessage(RoomId, messageGroup));
         }
 
         void TryKeepLive()
@@ -206,7 +214,7 @@ namespace Douyu.Client
             do {
                 if (!IsCollecting)
                     break;
-                MyThread.Wait(100);
+                MyApplication.Delay(100);
             } while (stopwatch.ElapsedMilliseconds < STOP_COLLECT_TIMEOUT);
             if (IsCollecting)
                 throw new DouyuException("结束弹幕收集失败: 关闭超时!");
