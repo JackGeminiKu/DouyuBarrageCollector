@@ -44,7 +44,9 @@ namespace Douyu.Client
                     LogService.InfoFormat("连接到斗鱼服务器: {0}", server.ToString());
                     exception = null;
                     _douyuSocket = new DouyuSocket();
-                    _douyuSocket.Connect(server);
+                    var host = server.Split(':')[0];
+                    var port = int.Parse(server.Split(':')[1]);
+                    _douyuSocket.Connect(host, port);
                 } catch (Exception ex) {
                     exception = ex;
                 }
@@ -93,18 +95,20 @@ namespace Douyu.Client
 
         static System.Timers.Timer _keepliveTimer;
 
-        static IPEndPoint[] GetServers(int roomId)
+        static string[] GetServers(int roomId)
         {
             var roomPage = GetRoomPage(roomId);
-            var regex = new Regex("\"server_config\":\"(?<ServerConfig>[^\"]+)\"");
-            var match = regex.Match(roomPage);
-            if (!match.Success)
+            var regex = new Regex("{\"domain\":\"(?<domain>([a-zA-Z0-9]|\\.)+)\",\"port\":\"(?<port>\\d+)\"}");
+            //var regex = new Regex("\"");
+            var matches = regex.Matches(roomPage);
+            if (matches.Count == 0)
                 throw new DouyuException("没有找到斗鱼服务器列表!");
 
-            var serverConfig = HttpUtility.UrlDecode(match.Groups["ServerConfig"].Value, Encoding.ASCII);
-            var servers = new List<IPEndPoint>();
-            foreach (var server in JsonConvert.DeserializeObject<dynamic>(serverConfig)) {
-                servers.Add(new IPEndPoint(IPAddress.Parse(server.ip.Value), int.Parse(server.port.Value)));
+            var servers = new List<string>();
+            for (var i = 0; i < matches.Count; ++i) {
+                var host = matches[i].Groups["domain"].Value;
+                var port = matches[i].Groups["port"].Value;
+                servers.Add(string.Format("{0}:{1}", host, port));
             }
 
             if (servers.Count == 0)

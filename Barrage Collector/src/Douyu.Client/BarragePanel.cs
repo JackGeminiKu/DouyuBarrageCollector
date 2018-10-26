@@ -93,7 +93,7 @@ namespace Douyu.Client
         void barrageCollector_ChatMessageRecieved(object sender, MessageEventArgs<ChatMessage> e)
         {
             AppendText(txtMessage, "[{0}] [{1}]: {2}",
-                DateTime.Now.ToString("HH:mm:ss"), e.Message.UserName, e.Message.Text);
+                DateTime.Now.ToString("MM/dd HH:mm:ss"), e.Message.UserName, e.Message.Text);
         }
 
         void barrageCollector_GiftMessageRecieved(object sender, MessageEventArgs<GiftMessage> e)
@@ -103,7 +103,7 @@ namespace Douyu.Client
                     return;
             }
             AppendText(txtMessage, "[{0}] [{1}]: {2}",
-                DateTime.Now.ToString("HH:mm:ss"), e.Message.UserName, e.Message.Gift.Name);
+                DateTime.Now.ToString("MM/dd HH:mm:ss"), e.Message.UserName, e.Message.Gift.Name);
         }
 
         void barrageCollector_ChouqinMessageRecieved(object sender, MessageEventArgs<ChouqinMessage> e)
@@ -113,7 +113,7 @@ namespace Douyu.Client
                     return;
             }
             AppendText(txtMessage, "[{0}] [{1}]: 酬勤{2}",
-                DateTime.Now.ToString("HH:mm:ss"), e.Message.UserId, e.Message.Level);
+                DateTime.Now.ToString("MM/dd HH:mm:ss"), e.Message.UserId, e.Message.Level);
         }
 
         void barrageCollector_ClientMessageSent(object sender, MessageEventArgs<ClientMessage> e)

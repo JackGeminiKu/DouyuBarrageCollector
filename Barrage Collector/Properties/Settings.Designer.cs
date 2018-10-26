@@ -25,8 +25,8 @@ namespace Douyu.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=10.0.0.2;Initial Catalog=Douyu2;User ID=sa;Password=Jack52664638;Mult" +
-            "ipleActiveResultSets=true")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=studio;Initial Catalog=Douyu2;User ID=sa;Password=Jack52664638;Multip" +
+            "leActiveResultSets=true")]
         public string ConnectionString {
             get {
                 return ((string)(this["ConnectionString"]));

@@ -15,6 +15,13 @@ namespace Douyu.Client
     {
         Socket _socket;
 
+        public void Connect(string host, int port)
+        {
+            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            _socket.Connect(host, port);
+            Connected = true;
+        }
+
         public void Connect(IPEndPoint server)
         {
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);

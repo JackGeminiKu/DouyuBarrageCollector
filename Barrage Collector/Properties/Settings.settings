@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="ConnectionString" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Data Source=10.0.0.2;Initial Catalog=Douyu2;User ID=sa;Password=Jack52664638;MultipleActiveResultSets=true</Value>
+      <Value Profile="(Default)">Data Source=studio;Initial Catalog=Douyu2;User ID=sa;Password=Jack52664638;MultipleActiveResultSets=true</Value>
     </Setting>
   </Settings>
 </SettingsFile>
